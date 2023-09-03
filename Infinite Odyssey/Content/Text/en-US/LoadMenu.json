@@ -1,0 +1,7 @@
+{
+  "fileNum": {
+    "type": "template",
+    "text": "File #{0}",
+    "values": [ "@fileNum" ]
+  }
+}

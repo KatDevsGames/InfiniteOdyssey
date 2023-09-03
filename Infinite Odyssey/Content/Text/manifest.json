@@ -1,0 +1,19 @@
+{
+  "languages": {
+    "en-US": {
+      "name": "English (United States)",
+      "fallback": true,
+      "localNames": {
+        "en-US": "English (United States)",
+        "de-DE": "Englisch (USA)"
+      }
+    },
+    "de-DE": {
+      "name": "German (Germany)",
+      "localNames": {
+        "en-US": "German (Germany)",
+        "de-DE": "Deutsch (Deutschland)"
+      }
+    }
+  }
+}

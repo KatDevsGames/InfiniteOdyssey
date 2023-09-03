@@ -1,0 +1,53 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/platform:DesktopGL
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+/reference:..\..\packages\monogame.extended.content.pipeline\3.8.0\tools\MonoGame.Extended.Content.Pipeline.dll
+
+#---------------------------------- Content ---------------------------------#
+
+#begin Fonts/TitleMenu.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/TitleMenu.spritefont
+
+#begin Music/Title.ogg
+/copy:Music/Title.ogg
+
+#begin Sprites/Menu/PinchCursor.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Sprites/Menu/PinchCursor.png
+
+#begin Text/de-DE/LoadMenu.json
+/copy:Text/de-DE/LoadMenu.json
+
+#begin Text/de-DE/TitleMenu.json
+/copy:Text/de-DE/TitleMenu.json
+
+#begin Text/en-US/LoadMenu.json
+/copy:Text/en-US/LoadMenu.json
+
+#begin Text/en-US/TitleMenu.json
+/copy:Text/en-US/TitleMenu.json
+
+#begin Text/manifest.json
+/copy:Text/manifest.json
+
