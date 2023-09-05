@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using FmodForFoxes;
 using InfiniteOdyssey.Extensions.Converters;
+using InfiniteOdyssey.Loaders;
 using InfiniteOdyssey.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,9 +17,11 @@ public class Game : Microsoft.Xna.Framework.Game
     private readonly GraphicsDeviceManager m_graphics;
     public SpriteBatch SpriteBatch { get; private set; }
 
-    private InputMapper m_inputMapper = new();
+    public InputMapper InputMapper { get; }
 
-    private readonly SceneManager m_sceneManager = new();
+    public SceneManager SceneManager { get; } = new();
+
+    public Settings Settings { get; } = new();
 
     public RenderTarget2D RenderTarget { get; private set; }
     private Rectangle m_renderDest;
@@ -42,11 +46,18 @@ public class Game : Microsoft.Xna.Framework.Game
         //Content Loader
         Content.RootDirectory = "Content";
 
+        //Input Mapper
+        InputMapper = new(this);
+
+        //Text Loader
+        TextLoader.SetLocale(Settings.LanguageLocale ?? CultureInfo.CurrentCulture.Name);
+
         //Misc
         IsMouseVisible = true;
 
         //Scene Manager
-        m_sceneManager.Add(new Title(this), "Title");
+        SceneManager.Add(new Title(this), "Title");
+        SceneManager.Add(new Scenes.Settings(this, false), "Settings");
     }
 
     public IEnumerable<DisplayMode> GetValidResolutions() => GraphicsAdapter.DefaultAdapter.SupportedDisplayModes;
@@ -79,7 +90,7 @@ public class Game : Microsoft.Xna.Framework.Game
         JsonInitializer.Init();
         RenderTarget = new RenderTarget2D(m_graphics.GraphicsDevice, 1280, 720);
 
-        m_sceneManager.Initalize();
+        SceneManager.Initialize();
         base.Initialize();
     }
 
@@ -89,7 +100,7 @@ public class Game : Microsoft.Xna.Framework.Game
         FmodManager.Init(m_nativeLibrary, FmodInitMode.CoreAndStudio, "Content");
 
         // load content here
-        m_sceneManager.Load("Title");
+        SceneManager.Load("Title");
     }
 
     protected override void UnloadContent()
@@ -104,8 +115,8 @@ public class Game : Microsoft.Xna.Framework.Game
             Exit();
 
         FmodManager.Update();
-        m_inputMapper.Update(gameTime);
-        m_sceneManager.Update(gameTime);
+        InputMapper.Update(gameTime);
+        SceneManager.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -117,7 +128,7 @@ public class Game : Microsoft.Xna.Framework.Game
 
         SpriteBatch.Begin();
         // put drawing code here
-        m_sceneManager.Draw(gameTime);
+        SceneManager.Draw(gameTime);
         SpriteBatch.End();
 
         GraphicsDevice.SetRenderTarget(null);

@@ -1,5 +1,4 @@
-﻿using InfiniteOdyssey.Scenes;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace InfiniteOdyssey.Behaviors;
@@ -22,8 +21,7 @@ public class PinchCursor : SceneBehavior
 
     public override void LoadContent()
     {
-        Texture2D tex = Game.Content.Load<Texture2D>("Sprites\\Menu\\PinchCursor");
-        m_sprite = new SpriteBehavior(Game, tex, 16, 16, new[] { 0, 1 }, 0.2, true);
+        m_sprite = new SpriteBehavior(Game, "Sprites\\Menu\\PinchCursor", 16, 16, new[] { 0, 1 }, 0.2, true);
     }
 
     public override void Update(GameTime gameTime)

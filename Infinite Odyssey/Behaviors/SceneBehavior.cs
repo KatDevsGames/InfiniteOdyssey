@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace InfiniteOdyssey.Scenes;
+namespace InfiniteOdyssey.Behaviors;
 
 public class SceneBehavior
 {

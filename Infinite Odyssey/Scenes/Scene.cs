@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using InfiniteOdyssey.Behaviors;
+using InfiniteOdyssey.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace InfiniteOdyssey.Scenes;
@@ -14,13 +16,18 @@ public abstract class Scene
     }
 #pragma warning restore CS8618
 
-    private readonly SortedDictionary<int, List<SceneBehaviorEntry>> m_behaviorsPriority = new();
+    private readonly SortedDictionary<int, List<SceneBehaviorEntry>> m_behaviorsPriority = new(ReverseComparer<int>.Instance);
     private readonly Dictionary<string, SceneBehaviorEntry> m_behaviorsName = new();
 
-    protected Game Game { get; }
+    public bool Active { get; set; }
 
-    // ReSharper disable once VirtualMemberCallInConstructor
-    protected Scene(Game game) => Game = game;
+    protected Game Game { get; }
+    
+    protected Scene(Game game, bool active = true)
+    {
+        Game = game;
+        Active = active;
+    }
 
     //singleton version of this?
     public void AddBehavior(string name, SceneBehavior behavior) => AddBehavior(name, 0, behavior);

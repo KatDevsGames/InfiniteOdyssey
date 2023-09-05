@@ -1,0 +1,17 @@
+{
+  "noFlashing": "Disable Flashing",
+  "noColors": "Color Vision Deficiency",
+
+  "musicVolume": "Music Volume",
+  "sfxVolume": "SFX Volume",
+  "dialogVolume": "Dialog Volume",
+
+  "textSpeed": "Text Speed",
+  "languageLocale": "Language",
+
+  "inputMap": "Controller Bindings",
+
+  "display": "Display Settings",
+  "displayResolution": "Display Resolution",
+  "fullScreen": "Fullscreen"
+}

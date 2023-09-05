@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Runtime.Serialization;
 using InfiniteOdyssey.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -10,24 +10,33 @@ namespace InfiniteOdyssey.Loaders;
 
 public class TextLoader
 {
-    public static TextLoader Instance { get; private set; } = new(
-        Settings.LanguageLocale ??
-        CultureInfo.CurrentCulture.Name);
+    public static TextLoader Instance { get; private set; }
 
     public static void SetLocale(string locale) => Instance = new TextLoader(locale);
+
+    public static LocaleManifest Manifest { get; }
+
+    static TextLoader()
+    {
+        string json = File.ReadAllText("Content\\Text\\manifest.json");
+        Manifest = JsonConvert.DeserializeObject<LocaleManifest>(json);
+        m_defaultLocale = Manifest.Locales[Manifest.Fallback];
+    }
 
     private const string MISSING_BANK = "MISSING DIALOG BANK {0}";
     private const string MISSING_ENTRY = "MISSING DIALOG ENTRY {1} IN BANK {0}";
     private const string MISSING_ITEM_ENTRY = "MISSING ITEM ENTRY {0}";
 
-    private const string GENERAL_SPECIES_NAME = "General";
+    public const string DEFAULT_LOCALE = "en-US";
+    private static readonly Locale m_defaultLocale;
 
-    public readonly string localeCode;
-    public readonly string localeName;
+    public readonly string m_localeCode;
+    public readonly string m_localeName;
 
     private readonly (string name, DictType type)[] LOCALE_BANKS =
     {
         ("TitleMenu", DictType.Basic),
+        ("SettingsMenu", DictType.Basic),
         ("LoadMenu", DictType.Template)
     };
 
@@ -43,38 +52,108 @@ public class TextLoader
     public Dictionary<string, Dictionary<string, TemplatedString>> templateData = new();
 
     public Dictionary<uint, (string name, string description)> itemData = new();
-    public TextLoader(string? locale)
+
+    [JsonConverter(typeof(Converter))]
+    public class LocaleManifest
     {
-        string text = File.ReadAllText("Content\\Text\\manifest.json");
-        JObject mObj = JObject.Parse(text);
+        public readonly Dictionary<string, Locale> Locales;
 
-        var languages = (IDictionary<string, JToken>)mObj["languages"];
+        public readonly string Fallback;
 
-        loadLang:
-        if ((locale != null) && (languages?.TryGetValue(locale, out JToken? lToken) ?? false))
+        [JsonConstructor]
+        public LocaleManifest(Dictionary<string, Locale> locales, string? fallback)
         {
-            var lDict = ((IDictionary<string, JToken>)lToken);
-            if (lDict.TryGetValue("redirect", out JToken? fbToken))
+            Locales = locales;
+            Fallback = fallback ?? DEFAULT_LOCALE;
+        }
+
+        private class Converter : JsonConverter<LocaleManifest>
+        {
+            public override void WriteJson(JsonWriter writer, LocaleManifest? value, JsonSerializer serializer) => throw new NotImplementedException();
+
+            public override LocaleManifest? ReadJson(JsonReader reader, Type objectType, LocaleManifest? existingValue, bool hasExistingValue, JsonSerializer serializer)
             {
-                locale = fbToken.Value<string>();
+                if (reader.TokenType == JsonToken.Null) return null;
+                JObject j = JObject.Load(reader);
+                
+                JObject jLocales = (j["locales"] as JObject) ?? throw new SerializationException();
+                Dictionary<string, Locale> locales = new();
+                foreach (var locale in jLocales)
+                {
+                    string code = locale.Key;
+                    JObject lj = (locale.Value as JObject) ?? throw new SerializationException();
+                    string name = lj["name"]?.Value<string>() ?? throw new SerializationException();
+                    string? redirect = lj["redirect"]?.Value<string>();
+                    Dictionary<string, string> localeNames = lj["localeNames"]?.ToObject<Dictionary<string, string>>() ?? throw new SerializationException(); ;
+                    locales.Add(code, new Locale(code, name, redirect, localeNames));
+                }
+
+                string? fallback = j["fallback"]?.Value<string>();
+
+                return new(locales, fallback);
+            }
+        }
+    }
+
+    public class Locale
+    {
+        [JsonProperty(PropertyName = "code")]
+        public readonly string Code;
+
+        [JsonProperty(PropertyName = "name")]
+        public readonly string Name;
+
+        [JsonProperty(PropertyName = "redirect")]
+        public readonly string? Redirect;
+
+        [JsonProperty(PropertyName = "localNames")]
+        public readonly Dictionary<string, string> LocalNames;
+
+        [JsonConstructor]
+        public Locale(string code, string name, string redirect, Dictionary<string, string> localNames)
+        {
+            Code = code;
+            Name = name;
+            Redirect = redirect;
+            LocalNames = localNames;
+        }
+    }
+
+    public TextLoader(string? localeCode)
+    {
+        var languages = Manifest.Locales;
+        string fallback = Manifest.Fallback ?? DEFAULT_LOCALE;
+
+        HashSet<string> wasRedirected = new();
+        loadLang:
+        if ((localeCode != null) && (languages?.TryGetValue(localeCode, out Locale? locale) ?? false))
+        {
+            string? redirect = locale.Redirect;
+            if (!string.IsNullOrWhiteSpace(redirect))
+            {
+                if (string.Equals(localeCode, fallback))
+                    throw new Exception("The fallback language may not contain a redirect.");
+
+                wasRedirected.Add(localeCode);
+                localeCode = redirect;
+
+                if (wasRedirected.Contains(localeCode))
+                    throw new Exception("The locale manifest contained a redirection loop.");
                 goto loadLang;
             }
-            localeName = lDict["name"].Value<string>();
-            localeCode = locale;
+            m_localeName = locale.Name;
+            m_localeCode = locale.Code;
             LoadBaseStrings();
             return;
         }
 
-        foreach (KeyValuePair<string, JToken> lang in languages)
+        if ((!string.IsNullOrWhiteSpace(fallback)) && (!string.Equals(fallback, localeCode)))
         {
-            IDictionary<string, JToken> lVal = (IDictionary<string, JToken>)lang.Value;
-            if (lVal.TryGetValue("fallback", out JToken fbVal) && fbVal.Value<bool>())
-            {
-                locale = lang.Key;
-                goto loadLang;
-            }
+            localeCode = fallback;
+            goto loadLang;
         }
-        throw new Exception($"The locale was not found and the manifest did not specify a fallback.");
+
+        throw new Exception("The locale was not found and the manifest did not specify a valid fallback.");
     }
 
     public string GetText(string bank, string entry)
@@ -93,7 +172,7 @@ public class TextLoader
 
     public DialogSet GetDialogSet(string mission)
     {
-        string text = File.ReadAllText($"Content\\Text\\{localeCode}\\Dialog\\{mission}.json");
+        string text = File.ReadAllText($"Content\\Text\\{m_localeCode}\\Dialog\\{mission}.json");
         return JsonConvert.DeserializeObject<DialogSet>(text);
     }
 
@@ -119,7 +198,9 @@ public class TextLoader
         textData.Clear();
         foreach ((string name, DictType type) next in LOCALE_BANKS)
         {
-            string text = File.ReadAllText($"Content\\Text\\{localeCode}\\{next.name}.json");
+            string path = $"Content\\Text\\{m_localeCode}\\{next.name}.json";
+            if (!File.Exists(path)) path = $"Content\\Text\\{DEFAULT_LOCALE}\\{next.name}.json";
+            string text = File.ReadAllText(path);
             switch (next.type)
             {
                 case DictType.Basic:

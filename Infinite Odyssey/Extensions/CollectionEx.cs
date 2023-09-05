@@ -32,6 +32,39 @@ public static class CollectionEx
         return queue;
     }
 
+    public static bool TryPopFirst<T>(this LinkedList<T> list, [MaybeNullWhen(false)] out T value)
+    {
+        LinkedListNode<T>? node = list.First;
+        if (node == null)
+        {
+            value = default;
+            return false;
+        }
+        value = node.Value;
+        list.RemoveFirst();
+        return true;
+    }
+
+    public static bool TryPopLast<T>(this LinkedList<T> list, [MaybeNullWhen(false)] out T value)
+    {
+        LinkedListNode<T>? node = list.Last;
+        if (node == null)
+        {
+            value = default;
+            return false;
+        }
+        value = node.Value;
+        list.RemoveLast();
+        return true;
+    }
+
+    public static T PopFirst<T>(this LinkedList<T> list)
+    {
+        T result = list.First.Value;
+        list.RemoveLast();
+        return result;
+    }
+
     public static T PopLast<T>(this LinkedList<T> list)
     {
         T result = list.Last.Value;
@@ -39,80 +72,129 @@ public static class CollectionEx
         return result;
     }
 
+    public static bool TryRemove<T>(this IEnumerable<T> collection, T value)
+    {
+        switch (collection)
+        {
+            /*case Queue<T> qu:
+                {
+                    bool result = qu.Count > 0;
+                    if (result) value = result ? qu.Dequeue() : default;
+                    else value = default;
+                    return result;
+                }
+            case RewindableQueue<T> qu:
+                {
+                    return qu.TryDequeue(out value);
+                }*/
+            case Stack<T> st:
+                {
+                    // this is slightly cursed - replace if problematic
+                    T obj = st.Pop();
+                    if (obj?.Equals(value) ?? (value == null)) return true;
+                    bool result = st.TryRemove(value);
+                    st.Push(obj);
+                    return result;
+                }
+            case RandomList<T> rl:
+                {
+                    return rl.Remove(value);
+                }
+            case List<T> li:
+                {
+                    return li.Remove(value);
+                }
+            case LinkedList<T> ll:
+                {
+                    return ll.Remove(value);
+                }
+            case HashSet<T> hs:
+                {
+                    return hs.Remove(value);
+                }
+            case RewindableHashSet<T> hs:
+                {
+                    return hs.Remove(value);
+                }
+            default:
+                return false;
+        }
+    }
+
     public static bool TryRemove<T>(this IEnumerable<T> collection, out T value)
     {
         switch (collection)
         {
             case Queue<T> qu:
-            {
-                bool result = qu.Count > 0;
-                if (result) value = result ? qu.Dequeue() : default;
-                else value = default;
-                return result;
-            }
+                {
+                    bool result = qu.Count > 0;
+                    if (result) value = result ? qu.Dequeue() : default;
+                    else value = default;
+                    return result;
+                }
             case RewindableQueue<T> qu:
-            {
-                return qu.TryDequeue(out value);
-            }
+                {
+                    return qu.TryDequeue(out value);
+                }
             case Stack<T> st:
-            {
-                bool result = st.Count > 0;
-                if (result) value = result ? st.Pop() : default;
-                else value = default;
-                return result;
-            }
+                {
+                    bool result = st.Count > 0;
+                    if (result) value = result ? st.Pop() : default;
+                    else value = default;
+                    return result;
+                }
             case RandomList<T> rl:
-            {
-                bool result = rl.Count > 0;
-                if (result) value = result ? rl.RemoveRandom() : default;
-                else value = default;
-                return result;
-            }
+                {
+                    bool result = rl.Count > 0;
+                    if (result) value = result ? rl.RemoveRandom() : default;
+                    else value = default;
+                    return result;
+                }
             case List<T> li:
-            {
-                bool result = li.Count > 0;
-                if (result)
                 {
-                    int i = li.Count - 1;
-                    value = li[i];
-                    li.RemoveAt(i);
+                    bool result = li.Count > 0;
+                    if (result)
+                    {
+                        int i = li.Count - 1;
+                        value = li[i];
+                        li.RemoveAt(i);
+                    }
+                    else value = default;
+                    return result;
                 }
-                else value = default;
-                return result;
-            }
             case LinkedList<T> ll:
-            {
-                bool result = ll.Count > 0;
-                if (result)
                 {
-                    value = ll.Last.Value;
-                    ll.RemoveLast();
+                    bool result = ll.Count > 0;
+                    if (result)
+                    {
+                        value = ll.Last.Value;
+                        ll.RemoveLast();
+                    }
+                    else value = default;
+                    return result;
                 }
-                else value = default;
-                return result;
-            }
             case HashSet<T> hs:
-            {
-                bool result = hs.Count > 0;
-                if (result)
                 {
-                    value = hs.First();
-                    hs.Remove(value);
+                    bool result = hs.Count > 0;
+                    if (result)
+                    {
+                        value = hs.First();
+                        hs.Remove(value);
+                    }
+                    else value = default;
+                    return result;
                 }
-                else value = default;
-                return result;
-            }
             case RewindableHashSet<T> hs:
-            {
-                bool result = hs.Count > 0;
-                if (result)
                 {
-                    value = hs.First();
-                    hs.Remove(value);
+                    bool result = hs.Count > 0;
+                    if (result)
+                    {
+                        value = hs.First();
+                        hs.Remove(value);
+                    }
+                    else value = default;
+                    return result;
                 }
-                else value = default;
-                return result;
-            }
             default:
                 value = default;
                 return false;
@@ -124,45 +206,45 @@ public static class CollectionEx
         switch (collection)
         {
             case Queue<T> qu:
-            {
-                qu.Enqueue(value);
-                return true;
-            }
+                {
+                    qu.Enqueue(value);
+                    return true;
+                }
             case RewindableQueue<T> qu:
-            {
-                qu.Enqueue(value);
-                return true;
-            }
+                {
+                    qu.Enqueue(value);
+                    return true;
+                }
             case Stack<T> st:
-            {
-                st.Push(value);
-                return true;
-            }
+                {
+                    st.Push(value);
+                    return true;
+                }
             case List<T> rl:
-            {
-                rl.Add(value);
-                return true;
-            }
+                {
+                    rl.Add(value);
+                    return true;
+                }
             case LinkedList<T> rl:
-            {
-                rl.AddLast(value);
-                return true;
-            }
+                {
+                    rl.AddLast(value);
+                    return true;
+                }
             case HashSet<T> hs:
-            {
-                hs.Add(value);
-                return true;
-            }
+                {
+                    hs.Add(value);
+                    return true;
+                }
             case RewindableHashSet<T> hs:
-            {
-                hs.Add(value);
-                return true;
-            }
+                {
+                    hs.Add(value);
+                    return true;
+                }
             case ICollection<T> ic:
-            {
-                ic.Add(value);
-                return true;
-            }
+                {
+                    ic.Add(value);
+                    return true;
+                }
             default:
                 return false;
         }
@@ -173,45 +255,45 @@ public static class CollectionEx
         switch (collection)
         {
             case Queue<T> qu:
-            {
-                foreach (T value in values) { qu.Enqueue(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { qu.Enqueue(value); }
+                    return true;
+                }
             case RewindableQueue<T> qu:
-            {
-                foreach (T value in values) { qu.Enqueue(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { qu.Enqueue(value); }
+                    return true;
+                }
             case Stack<T> st:
-            {
-                foreach (T value in values) { st.Push(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { st.Push(value); }
+                    return true;
+                }
             case List<T> rl:
-            {
-                rl.AddRange(values);
-                return true;
-            }
+                {
+                    rl.AddRange(values);
+                    return true;
+                }
             case LinkedList<T> rl:
-            {
-                foreach (T value in values) { rl.AddLast(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { rl.AddLast(value); }
+                    return true;
+                }
             case HashSet<T> hs:
-            {
-                foreach (T value in values) { hs.Add(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { hs.Add(value); }
+                    return true;
+                }
             case RewindableHashSet<T> hs:
-            {
-                foreach (T value in values) { hs.Add(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { hs.Add(value); }
+                    return true;
+                }
             case ICollection<T> ic:
-            {
-                foreach (T value in values) { ic.Add(value); }
-                return true;
-            }
+                {
+                    foreach (T value in values) { ic.Add(value); }
+                    return true;
+                }
             default:
                 return false;
         }
@@ -222,10 +304,10 @@ public static class CollectionEx
         switch (collection)
         {
             case { } d:
-            {
-                foreach (var v in values) d.Add(v.Key, v.Value);
-                return true;
-            }
+                {
+                    foreach (var v in values) d.Add(v.Key, v.Value);
+                    return true;
+                }
             default:
                 return false;
         }
@@ -251,6 +333,9 @@ public static class CollectionEx
         }
         return result;
     }
+
+    public static bool TryGetKey<K, V>(this Dictionary<K, V> dictionary, V value, [MaybeNullWhen(false)] out K key) where K : notnull
+        => TryGetKey((IReadOnlyCollection<KeyValuePair<K, V>>)dictionary, value, out key);
 
     public static bool TryGetKey<K, V>(this ICollection<KeyValuePair<K, V>> dictionary, V value, [MaybeNullWhen(false)] out K key) where K : notnull
     {

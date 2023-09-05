@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using InfiniteOdyssey.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace InfiniteOdyssey.Scenes;
@@ -8,6 +9,7 @@ public class SceneManager
     private readonly Dictionary<string, Scene> m_scenes = new();
 
     private Scene? m_activeScene;
+    private readonly LinkedList<Scene> m_inactiveScenes = new();
 
     public void Add(Scene scene, string name) => m_scenes.Add(name, scene);
 
@@ -16,14 +18,56 @@ public class SceneManager
     public void Load(string sceneName)
     {
         Scene scene = m_scenes[sceneName];
-        Scene? wasActive = m_activeScene;
-        m_activeScene = null;
-        wasActive?.UnloadContent();
         scene.LoadContent();
+        if (m_activeScene != null)
+        {
+            m_activeScene.Active = false;
+            m_inactiveScenes.AddFirst(m_activeScene);
+        }
         m_activeScene = scene;
+        scene.Active = true;
     }
 
-    public void Initalize()
+    public void Unload()
+    {
+        if (m_activeScene != null)
+        {
+            m_activeScene.Active = false;
+            m_activeScene.UnloadContent();
+        }
+        if (m_inactiveScenes.TryPopFirst(out m_activeScene))
+        {
+            m_activeScene.Active = true;
+        }
+    }
+
+    public void Unload(Scene scene)
+    {
+        if (!m_scenes.TryGetKey(scene, out string? sceneName)) return;
+        Unload(sceneName);
+    }
+
+    public void Unload(string sceneName)
+    {
+        if (!m_scenes.Remove(sceneName, out Scene? scene)) return;
+        if (ReferenceEquals(m_activeScene, scene))
+        {
+            m_activeScene.Active = false;
+            m_activeScene.UnloadContent();
+            if (m_inactiveScenes.TryPopFirst(out m_activeScene))
+            {
+                m_activeScene.Active = true;
+            }
+            return;
+        }
+        if (m_inactiveScenes.TryRemove(scene))
+        {
+            scene.Active = false;
+            scene.UnloadContent();
+        }
+    }
+
+    public void Initialize()
     {
         foreach (Scene scene in m_scenes.Values)
         {
@@ -38,6 +82,13 @@ public class SceneManager
 
     public void Draw(GameTime gameTime)
     {
+        LinkedListNode<Scene>? node = m_inactiveScenes.Last;
+        while (node != null)
+        {
+            //if (!node.Value.Active) continue;
+            node.Value.Draw(gameTime);
+            node = node.Previous;
+        }
         m_activeScene?.Draw(gameTime);
     }
 }

@@ -7,25 +7,24 @@ using Newtonsoft.Json.Linq;
 namespace InfiniteOdyssey;
 
 [SuppressMessage("ReSharper", "RedundantDefaultMemberInitializer")]
-public static class Settings
+public class Settings : ICloneable
 {
-    public static bool NoFlashing = false;
-    public static bool NoColors = false;
+    public bool NoFlashing = false;
+    public bool NoColors = false;
 
-    public static float MusicVolume = 0.7f;
-    public static float SFXVolume = 0.7f;
-    public static float DialogVolume = 0.7f;
+    public float MusicVolume = 0.7f;
+    public float SFXVolume = 0.7f;
+    public float DialogVolume = 0.7f;
 
-    public static float TextSpeed = 1;
+    public float TextSpeed = 1;
+    public string? LanguageLocale;
 
-    public static string? LanguageLocale;
-
-    public static JObject? InputMap;
+    public JObject? InputMap;
 
 #if DESKTOP
-    public static int DisplayWidth = 1920;
-    public static int DisplayHeight = 1080;
-    public static bool FullScreen = false;
+    public int DisplayWidth = 1920;
+    public int DisplayHeight = 1080;
+    public bool FullScreen = false;
 #else
     public const int DisplayWidth = 1920;
     public const int DisplayHeight = 1080;
@@ -34,15 +33,28 @@ public static class Settings
 
     private static readonly string BASE_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Watercolor Games", "Peacenet");
 
-    static Settings() => Load(0);
+    public Settings() => Load(0);
 
-    public static void Load(int saveNum)
+    public Settings(string json) => TryParseJSON(json);
+
+    public static bool TryLoad(int saveNum, out Settings value)
+    {
+        value = new Settings();
+        return value.Load(saveNum);
+    }
+
+    public bool Load(int saveNum)
     {
         string saveFile = Path.Combine(BASE_PATH, $"save_{saveNum}.db");
-        if (!File.Exists(saveFile)) { return; }
+        if (!File.Exists(saveFile)) { return false; }
+        return TryParseJSON(File.ReadAllText(BASE_PATH));
+    }
+
+    public bool TryParseJSON(string json)
+    {
         try
         {
-            JObject j = JObject.Parse(File.ReadAllText(BASE_PATH));
+            JObject j = JObject.Parse(json);
             if (j.TryGetValue("noFlashing", out JToken? noFlashing)) NoFlashing = noFlashing.Value<bool>();
             if (j.TryGetValue("noColors", out JToken? noColors)) NoColors = noColors.Value<bool>();
 
@@ -51,8 +63,8 @@ public static class Settings
             if (j.TryGetValue("dialogVolume", out JToken? dialogVolume)) DialogVolume = dialogVolume.Value<float>();
 
             if (j.TryGetValue("textSpeed", out JToken? textSpeed)) TextSpeed = textSpeed.Value<float>();
-
-            if (j.TryGetValue("languageLocale", out JToken? languageLocale)) LanguageLocale = languageLocale.Value<string>();
+            if (j.TryGetValue("languageLocale", out JToken? languageLocale))
+                LanguageLocale = languageLocale.Value<string>();
 
             if (j.TryGetValue("inputMap", out JToken? inputMap)) InputMap = (JObject?)inputMap;
 
@@ -60,14 +72,21 @@ public static class Settings
             if (j.TryGetValue("displayWidth", out JToken? displayWidth)) DisplayWidth = displayWidth.Value<int>();
             if (j.TryGetValue("displayHeight", out JToken? displayHeight)) DisplayHeight = displayHeight.Value<int>();
             if (j.TryGetValue("fullScreen", out JToken? fullScreen)) FullScreen = fullScreen.Value<bool>();
+
+            return true;
 #endif
         }
-        catch { /**/ }
+        catch { return false; }
     }
     
-    public static void Save(int saveNum)
+    public void Save(int saveNum)
     {
         string saveFile = Path.Combine(BASE_PATH, $"save_{saveNum}.db");
+        File.WriteAllText(saveFile, GetJSON());
+    }
+
+    public string GetJSON()
+    {
         JObject j = new()
         {
             {"noFlashing", NoFlashing},
@@ -78,7 +97,6 @@ public static class Settings
             {"dialogVolume", DialogVolume},
 
             {"textSpeed", TextSpeed},
-
             {"languageLocale", LanguageLocale},
 
             {"inputMap", InputMap},
@@ -89,6 +107,10 @@ public static class Settings
             {"fullScreen", FullScreen}
 #endif
         };
-        File.WriteAllText(saveFile, j.ToString(Formatting.None));
+        return j.ToString(Formatting.None);
     }
+
+    public Settings Clone() => new(GetJSON());
+
+    object ICloneable.Clone() => Clone();
 }

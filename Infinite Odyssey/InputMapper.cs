@@ -11,28 +11,42 @@ namespace InfiniteOdyssey;
 
 public class InputMapper
 {
+    public Game Game { get; }
+
     private readonly KeyboardListener m_keyboardListener = new();
 
     private readonly GamePadListener m_gamePadListener = new();
 
+    public enum MapperMode
+    {
+        Menu,
+        Action
+    }
+
+    public MapperMode Mode { get; set; }
+
     public interface IInputEventArgs { }
 
-    public struct DirectionEventArgs : IInputEventArgs
+    public struct DirectionEventArgs<T> : IInputEventArgs where T : Enum
     {
+        public readonly T EventType;
         public readonly Vector2 AxisValue;
 
-        public DirectionEventArgs(Vector2 axisValue)
+        public DirectionEventArgs(T eventType, Vector2 axisValue)
         {
+            EventType = eventType;
             AxisValue = axisValue;
         }
     }
 
-    public struct ButtonEventArgs : IInputEventArgs
+    public struct ButtonEventArgs<T> : IInputEventArgs where T : Enum
     {
+        public readonly T EventType;
         public readonly bool Pressed;
 
-        public ButtonEventArgs(bool pressed)
+        public ButtonEventArgs(T eventType, bool pressed)
         {
+            EventType = eventType;
             Pressed = pressed;
         }
     }
@@ -40,16 +54,97 @@ public class InputMapper
     public MenuEvents Menu { get; } = new();
     public class MenuEvents
     {
-        private event Action<GamePadEventArgs>? Up;
-        private event Action<GamePadEventArgs>? Down;
-        private event Action<GamePadEventArgs>? Left;
-        private event Action<GamePadEventArgs>? Right;
+        public enum EventTypes
+        {
+            Up, Down, Left, Right,
+            Confirm, Cancel,
+            Menu
+        }
 
-        private event Action<GamePadEventArgs>? Confirm;
-        private event Action<GamePadEventArgs>? Cancel;
+        public void FireEvent(EventTypes ev, IInputEventArgs e)
+        {
+            switch (ev)
+            {
+                case EventTypes.Up:
+                    Up?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+                case EventTypes.Down:
+                    Down?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+                case EventTypes.Left:
+                    Left?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+                case EventTypes.Right:
+                    Right?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+                case EventTypes.Confirm:
+                    Confirm?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+                case EventTypes.Cancel:
+                    Cancel?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+                case EventTypes.Menu:
+                    Menu?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    break;
+            }
+        }
+
+        public void ImportMap(JObject map)
+        {
+            m_gamepadMap.Clear();
+            m_gamepadMap = map["gamepadMap"].Value<Dictionary<EventTypes, Buttons>>();
+
+            m_keyboardMap.Clear();
+            m_keyboardMap = map["keyboardMap"].Value<Dictionary<EventTypes, Keys>>();
+
+            //SwapSticks = map["swapSticks"].Value<bool>();
+        }
+
+        public void SetDefaults()
+        {
+            m_gamepadMap.Clear();
+            m_gamepadMap.Add(EventTypes.Confirm, Buttons.A);
+            m_gamepadMap.Add(EventTypes.Cancel, Buttons.B);
+
+            m_gamepadMap.Add(EventTypes.Menu, Buttons.Start);
+
+            m_keyboardMap.Clear();
+            m_keyboardMap.Add(EventTypes.Up, Keys.W);
+            m_keyboardMap.Add(EventTypes.Down, Keys.S);
+            m_keyboardMap.Add(EventTypes.Left, Keys.A);
+            m_keyboardMap.Add(EventTypes.Right, Keys.D);
+
+            m_keyboardMap.Add(EventTypes.Confirm, Keys.K);
+            m_keyboardMap.Add(EventTypes.Cancel, Keys.L);
+
+            m_keyboardMap.Add(EventTypes.Menu, Keys.Escape);
+        }
+
+        public JObject ExportMap() =>
+            new()
+            {
+                { "gamepadMap", JObject.FromObject(GamepadMap) },
+                { "keyboardMap", JObject.FromObject(KeyboardMap) }
+            };
+
+        private Dictionary<EventTypes, Buttons> m_gamepadMap = new();
+        public IReadOnlyDictionary<EventTypes, Buttons> GamepadMap => m_gamepadMap;
+
+        private Dictionary<EventTypes, Keys> m_keyboardMap = new();
+        public IReadOnlyDictionary<EventTypes, Keys> KeyboardMap => m_keyboardMap;
+
+        //public bool SwapSticks { get; set; }
+
+        public event Action<ButtonEventArgs<EventTypes>>? Up;
+        public event Action<ButtonEventArgs<EventTypes>>? Down;
+        public event Action<ButtonEventArgs<EventTypes>>? Left;
+        public event Action<ButtonEventArgs<EventTypes>>? Right;
+
+        public event Action<ButtonEventArgs<EventTypes>>? Confirm;
+        public event Action<ButtonEventArgs<EventTypes>>? Cancel;
+
+        public event Action<ButtonEventArgs<EventTypes>>? Menu;
     }
-
-
 
     public ActionEvents Action { get; } = new();
     public class ActionEvents
@@ -74,37 +169,37 @@ public class InputMapper
                 case EventTypes.MoveDown:
                 case EventTypes.MoveLeft:
                 case EventTypes.MoveRight:
-                    Move?.Invoke((DirectionEventArgs)e);
+                    Move?.Invoke((DirectionEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.CameraNudge:
-                    CameraNudge?.Invoke((DirectionEventArgs)e);
+                    CameraNudge?.Invoke((DirectionEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Confirm:
-                    Confirm?.Invoke((ButtonEventArgs)e);
+                    Confirm?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Cancel:
-                    Cancel?.Invoke((ButtonEventArgs)e);
+                    Cancel?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Menu:
-                    Menu?.Invoke((ButtonEventArgs)e);
+                    Menu?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Map:
-                    Map?.Invoke((ButtonEventArgs)e);
+                    Map?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Attack:
-                    Attack?.Invoke((ButtonEventArgs)e);
+                    Attack?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Item:
-                    Item?.Invoke((ButtonEventArgs)e);
+                    Item?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Run:
-                    Run?.Invoke((ButtonEventArgs)e);
+                    Run?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.ItemCycleLeft:
-                    ItemCycleLeft?.Invoke((ButtonEventArgs)e);
+                    ItemCycleLeft?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.ItemCycleRight:
-                    ItemCycleRight?.Invoke((ButtonEventArgs)e);
+                    ItemCycleRight?.Invoke((ButtonEventArgs<EventTypes>)e);
                     break;
             }
         }
@@ -185,103 +280,199 @@ public class InputMapper
 
         public bool SwapSticks { get; set; }
 
-        public event Action<DirectionEventArgs>? Move;
-        public event Action<DirectionEventArgs>? CameraNudge;
+        public event Action<DirectionEventArgs<EventTypes>>? Move;
+        public event Action<DirectionEventArgs<EventTypes>>? CameraNudge;
 
-        public event Action<ButtonEventArgs>? Confirm;
-        public event Action<ButtonEventArgs>? Cancel;
+        public event Action<ButtonEventArgs<EventTypes>>? Confirm;
+        public event Action<ButtonEventArgs<EventTypes>>? Cancel;
         
-        public event Action<ButtonEventArgs>? Menu;
-        public event Action<ButtonEventArgs>? Map;
+        public event Action<ButtonEventArgs<EventTypes>>? Menu;
+        public event Action<ButtonEventArgs<EventTypes>>? Map;
         
-        public event Action<ButtonEventArgs>? Attack;
-        public event Action<ButtonEventArgs>? Item;
-        public event Action<ButtonEventArgs>? Run;
+        public event Action<ButtonEventArgs<EventTypes>>? Attack;
+        public event Action<ButtonEventArgs<EventTypes>>? Item;
+        public event Action<ButtonEventArgs<EventTypes>>? Run;
         
-        public event Action<ButtonEventArgs>? ItemCycleLeft;
-        public event Action<ButtonEventArgs>? ItemCycleRight;
+        public event Action<ButtonEventArgs<EventTypes>>? ItemCycleLeft;
+        public event Action<ButtonEventArgs<EventTypes>>? ItemCycleRight;
     }
 
-    public InputMapper()
+    public InputMapper(Game game)
     {
+        Game = game;
         m_gamePadListener.ButtonDown += OnGamePadButton;
         m_gamePadListener.ButtonUp += OnGamePadButton;
         m_gamePadListener.ThumbStickMoved += OnGamePadStick;
 
         m_keyboardListener.KeyPressed += OnKeyboardButtonDown;
         m_keyboardListener.KeyReleased += OnKeyboardButtonUp;
+
+        ImportSettings();
     }
 
     public void ImportSettings()
     {
-        JObject? settings = Settings.InputMap;
-        if(settings != null)
+        JObject? settings = Game.Settings.InputMap;
+        if (settings != null)
         {
+            Menu.ImportMap((JObject)settings["action"]);
             Action.ImportMap((JObject)settings["action"]);
             return;
         }
+        Menu.SetDefaults();
         Action.SetDefaults();
     }
 
-    public void ExportSettings() => Settings.InputMap = new() { { "action", Action.ExportMap() } };
+    public void ExportSettings() => Game.Settings.InputMap = new()
+    {
+        {"menu", Menu.ExportMap()},
+        {"action", Action.ExportMap()}
+    };
 
     private void OnKeyboardButtonUp(object? sender, KeyboardEventArgs e) => OnKeyboardButton(e, false);
     private void OnKeyboardButtonDown(object? sender, KeyboardEventArgs e) => OnKeyboardButton(e, true);
     private Vector2 m_keyboardMoveDirection = Vector2.Zero;
     private Vector2 m_keyboardCameraNudgeDirection = Vector2.Zero;
+
     private void OnKeyboardButton(KeyboardEventArgs e, bool keyDown)
+    {
+        switch (Mode)
+        {
+            case MapperMode.Menu:
+                OnKeyboardButtonMenu(e, keyDown);
+                return;
+            case MapperMode.Action:
+                OnKeyboardButtonAction(e, keyDown);
+                return;
+        }
+    }
+
+    private void OnKeyboardButtonMenu(KeyboardEventArgs e, bool keyDown)
+    {
+        MenuEvents.EventTypes ev;
+        switch (e.Key)
+        {
+            case Keys.Up:
+                ev = MenuEvents.EventTypes.Up;
+                break;
+            case Keys.Down:
+                ev = MenuEvents.EventTypes.Down;
+                break;
+            case Keys.Left:
+                ev = MenuEvents.EventTypes.Left;
+                break;
+            case Keys.Right:
+                ev = MenuEvents.EventTypes.Right;
+                break;
+            case Keys.Enter:
+                ev = MenuEvents.EventTypes.Confirm;
+                break;
+            case Keys.Back:
+                ev = MenuEvents.EventTypes.Cancel;
+                break;
+            case Keys.Escape:
+                ev = MenuEvents.EventTypes.Menu;
+                break;
+            default:
+                if (!Menu.KeyboardMap.TryGetKey(e.Key, out ev)) return;
+                Menu.FireEvent(ev, new ButtonEventArgs<MenuEvents.EventTypes>(ev, keyDown));
+                return;
+        }
+        Menu.FireEvent(ev, new ButtonEventArgs<MenuEvents.EventTypes>(ev, keyDown));
+    }
+
+    private void OnKeyboardButtonAction(KeyboardEventArgs e, bool keyDown)
     {
         if (!Action.KeyboardMap.TryGetKey(e.Key, out ActionEvents.EventTypes ev)) return;
 
+        Vector2 direction;
         switch (ev)
         {
             case ActionEvents.EventTypes.MoveUp:
                 m_keyboardMoveDirection.Y += keyDown ? -1 : 1;
                 m_keyboardMoveDirection.Y.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardMoveDirection));
+                direction = m_keyboardMoveDirection;
                 break;
             case ActionEvents.EventTypes.MoveDown:
                 m_keyboardMoveDirection.Y += keyDown ? 1 : -1;
                 m_keyboardMoveDirection.Y.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardMoveDirection));
+                direction = m_keyboardMoveDirection;
                 break;
             case ActionEvents.EventTypes.MoveLeft:
                 m_keyboardMoveDirection.X += keyDown ? -1 : 1;
                 m_keyboardMoveDirection.X.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardMoveDirection));
+                direction = m_keyboardMoveDirection;
                 break;
             case ActionEvents.EventTypes.MoveRight:
                 m_keyboardMoveDirection.X += keyDown ? 1 : -1;
                 m_keyboardMoveDirection.X.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardMoveDirection));
+                direction = m_keyboardMoveDirection;
                 break;
             case ActionEvents.EventTypes.CameraNudgeUp:
                 m_keyboardCameraNudgeDirection.Y += keyDown ? -1 : 1;
                 m_keyboardCameraNudgeDirection.Y.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardCameraNudgeDirection));
+                direction = m_keyboardCameraNudgeDirection;
                 break;
             case ActionEvents.EventTypes.CameraNudgeDown:
                 m_keyboardCameraNudgeDirection.Y += keyDown ? 1 : -1;
                 m_keyboardCameraNudgeDirection.Y.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardCameraNudgeDirection));
+                direction = m_keyboardCameraNudgeDirection;
                 break;
             case ActionEvents.EventTypes.CameraNudgeLeft:
                 m_keyboardCameraNudgeDirection.X += keyDown ? -1 : 1;
                 m_keyboardCameraNudgeDirection.X.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardCameraNudgeDirection));
+                direction = m_keyboardCameraNudgeDirection;
                 break;
             case ActionEvents.EventTypes.CameraNudgeRight:
                 m_keyboardCameraNudgeDirection.X += keyDown ? 1 : -1;
                 m_keyboardCameraNudgeDirection.X.Truncate(1);
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(m_keyboardCameraNudgeDirection));
+                direction = m_keyboardCameraNudgeDirection;
                 break;
             default:
-                Action.FireEvent(ev, new ButtonEventArgs(keyDown));
-                break;
+                Action.FireEvent(ev, new ButtonEventArgs<ActionEvents.EventTypes>(ev, keyDown));
+                return;
+        }
+        Action.FireEvent(ev, new DirectionEventArgs<ActionEvents.EventTypes>(ev, direction));
+    }
+    private void OnGamePadButton(object? sender, GamePadEventArgs e)
+    {
+        switch (Mode)
+        {
+            case MapperMode.Menu:
+                OnGamePadButtonMenu(e);
+                return;
+            case MapperMode.Action:
+                OnGamePadButtonAction(e);
+                return;
         }
     }
 
-    private void OnGamePadButton(object? sender, GamePadEventArgs e)
+    private void OnGamePadButtonMenu(GamePadEventArgs e)
+    {
+        MenuEvents.EventTypes ev;
+        switch (e.Button)
+        {
+            case Buttons.DPadUp or Buttons.LeftThumbstickUp or Buttons.RightThumbstickUp:
+                ev = MenuEvents.EventTypes.Up;
+                break;
+            case Buttons.DPadDown or Buttons.LeftThumbstickDown or Buttons.RightThumbstickDown:
+                ev = MenuEvents.EventTypes.Down;
+                break;
+            case Buttons.DPadLeft or Buttons.LeftThumbstickLeft or Buttons.RightThumbstickLeft:
+                ev = MenuEvents.EventTypes.Left;
+                break;
+            case Buttons.DPadRight or Buttons.LeftThumbstickRight or Buttons.RightThumbstickRight:
+                ev = MenuEvents.EventTypes.Right;
+                break;
+            default:
+                if (!Menu.GamepadMap.TryGetKey(e.Button, out ev)) return;
+                Menu.FireEvent(ev, new ButtonEventArgs<MenuEvents.EventTypes>(ev, e.CurrentState.IsButtonDown(e.Button)));
+                return;
+        }
+        Menu.FireEvent(ev, new ButtonEventArgs<MenuEvents.EventTypes>(ev, e.CurrentState.IsButtonDown(e.Button)));
+    }
+
+    private void OnGamePadButtonAction(GamePadEventArgs e)
     {
         if (!Action.GamepadMap.TryGetKey(e.Button, out ActionEvents.EventTypes ev)) return;
         // dpad can be bound to either move or nudge - kat
@@ -304,27 +495,44 @@ public class InputMapper
             {
                 direction.X = 1f;
             }
-            Action.FireEvent(ev, new DirectionEventArgs(direction));
+            Action.FireEvent(ev, new DirectionEventArgs<ActionEvents.EventTypes>(ev, direction));
         }
         else
         {
-            Action.FireEvent(ev, new ButtonEventArgs(e.CurrentState.IsButtonDown(e.Button)));
+            Action.FireEvent(ev, new ButtonEventArgs<ActionEvents.EventTypes>(ev, e.CurrentState.IsButtonDown(e.Button)));
         }
     }
 
     private void OnGamePadStick(object? sender, GamePadEventArgs e)
     {
+        switch (Mode)
+        {
+            case MapperMode.Menu:
+                // handled by button mapper
+                return;
+            case MapperMode.Action:
+                OnGamePadStickAction(e);
+                return;
+        }
+    }
+
+    private void OnGamePadStickAction(GamePadEventArgs e)
+    {
+        ActionEvents.EventTypes ev;
         switch (e.Button)
         {
             case Buttons.LeftStick when (!Action.SwapSticks):
             case Buttons.RightStick when Action.SwapSticks:
-                Action.FireEvent(ActionEvents.EventTypes.Move, new DirectionEventArgs(e.ThumbStickState));
+                ev = ActionEvents.EventTypes.Move;
                 break;
             case Buttons.RightStick when (!Action.SwapSticks):
             case Buttons.LeftStick when Action.SwapSticks:
-                Action.FireEvent(ActionEvents.EventTypes.CameraNudge, new DirectionEventArgs(e.ThumbStickState));
+                ev = ActionEvents.EventTypes.CameraNudge;
                 break;
+            default:
+                return;
         }
+        Action.FireEvent(ev, new DirectionEventArgs<ActionEvents.EventTypes>(ev, e.ThumbStickState));
     }
 
     public void Update(GameTime gameTime)

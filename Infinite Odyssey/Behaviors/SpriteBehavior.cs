@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace InfiniteOdyssey.Scenes;
+namespace InfiniteOdyssey.Behaviors;
 
 public class SpriteBehavior : SceneBehavior
 {
@@ -46,6 +46,10 @@ public class SpriteBehavior : SceneBehavior
 
     private bool m_firstCycle;
 
+    public SpriteBehavior(Game game, string assetName, int regionWidth, int regionHeight, int[] frames, double frameDuration, bool looping)
+        :this(game, game.Content.Load<Texture2D>(assetName), regionWidth, regionHeight, frames, frameDuration, looping){}
+
+
     public SpriteBehavior(Game game, Texture2D texture, int regionWidth, int regionHeight, int[] frames, double frameDuration, bool looping) : base(game)
     {
         Texture = texture;
@@ -62,7 +66,7 @@ public class SpriteBehavior : SceneBehavior
     public override void Update(GameTime gameTime)
     {
         if (!Running) return;
-        if ((!Looping) && m_firstCycle) return;
+        if (!Looping && m_firstCycle) return;
         m_deltaTime += gameTime.ElapsedGameTime.TotalSeconds;
         double al = AnimationLength;
         while (m_deltaTime > al)
