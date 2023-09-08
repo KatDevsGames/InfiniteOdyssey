@@ -1,6 +1,6 @@
 ﻿namespace InfiniteOdyssey.Extensions;
 
-internal static class TagEx
+public static class TagEx
 {
     public const string Respawn = "Respawn";
     public const string Finish = "Finish";

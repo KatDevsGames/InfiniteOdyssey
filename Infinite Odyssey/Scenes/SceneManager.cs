@@ -28,6 +28,12 @@ public class SceneManager
         scene.Active = true;
     }
 
+    public void Return(object? value)
+    {
+        Unload();
+        m_activeScene?.ReturnCallback(value);
+    }
+
     public void Unload()
     {
         if (m_activeScene != null)

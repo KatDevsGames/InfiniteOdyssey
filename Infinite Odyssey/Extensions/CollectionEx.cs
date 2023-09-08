@@ -121,6 +121,16 @@ public static class CollectionEx
         }
     }
 
+    public static int IndexOf<T>(this IList<T> list, T value)
+    {
+        int lc = list.Count;
+        for (int i = 0; i < lc; i++)
+        {
+            if (Equals(list[i], value)) return i;
+        }
+        return -1;
+    }
+
     public static bool TryRemove<T>(this IEnumerable<T> collection, out T value)
     {
         switch (collection)

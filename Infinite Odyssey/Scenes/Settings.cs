@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using InfiniteOdyssey.Behaviors;
 using InfiniteOdyssey.Loaders;
@@ -8,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace InfiniteOdyssey.Scenes;
 
-public class Settings : Scene
+public class Settings : MenuBase
 {
     //private readonly Scene m_modalReturn;
 
@@ -19,6 +18,9 @@ public class Settings : Scene
     private PinchCursor m_cursor;
 
     private int m_cursorPos = 0;
+
+    private Texture2D m_background;
+    private Vector2 m_backgroundPosition;
 
     private TextLoader m_textLoader;
     private readonly List<TextLoader.Locale> m_locales = TextLoader.Manifest.Locales.Values.ToList();
@@ -77,7 +79,6 @@ public class Settings : Scene
 
     private void OnMenuUpDown(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         switch (e.EventType)
         {
@@ -92,7 +93,6 @@ public class Settings : Scene
 
     private void OnMenuLeftRight(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         switch (e.EventType)
         {
@@ -154,7 +154,6 @@ public class Settings : Scene
 
     private void OnMenuConfirm(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         switch ((Selections)m_cursorPos)
         {
@@ -175,7 +174,6 @@ public class Settings : Scene
 
     private void OnMenuCancel(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         Game.SceneManager.Unload();
     }
@@ -196,7 +194,7 @@ public class Settings : Scene
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new PinchCursor(Game) { X = (300 - 24), Width = 100 });
+        AddBehavior("Cursor", m_cursor = new PinchCursor(Game));
     }
 
     public override void LoadContent()
@@ -207,6 +205,9 @@ public class Settings : Scene
         //channel.Looping = true;
 
         m_font = Game.Content.Load<SpriteFont>("Fonts\\SettingsMenu");
+        m_background = GetFrame(FrameColor.Red, 30, 15);
+        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
+        m_cursor.X = (int)(m_backgroundPosition.X + 16);
 
         ReloadText();
 
@@ -236,19 +237,22 @@ public class Settings : Scene
     {
         int position = m_cursorPos;
         Vector2 lineM = m_lineMeasurements[position];
-        m_cursor.Y = 100 + (LINE_SPACING * position) + (int)(lineM.Y / 2) + CURSOR_NUDGE_Y;
-        m_cursor.Width = (int)lineM.X + 32;
+        m_cursor.Y = (int)m_backgroundPosition.Y + 16 + (LINE_SPACING * position) + (int)(lineM.Y / 2) + CURSOR_NUDGE_Y;
+        m_cursor.Width = (int)lineM.X + 16;
     }
 
     public override void Draw(GameTime gameTime)
     {
-        base.Draw(gameTime);
+        Game.SpriteBatch.Draw(m_background, m_backgroundPosition, Color.White);
+
         for (int i = 0; i < m_lines.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, new Vector2(300, 100 + (LINE_SPACING * i)), Color.Black);
+            Game.SpriteBatch.DrawString(m_font, line, m_backgroundPosition + new Vector2(32, 16 + (LINE_SPACING * i)), Color.White);
         }
 
-        Game.SpriteBatch.DrawString(m_font, m_selectedLocaleName, new Vector2(500, 100 + (LINE_SPACING * (int)Selections.LanguageLocale)), Color.Black);
+        Game.SpriteBatch.DrawString(m_font, m_selectedLocaleName, m_backgroundPosition + new Vector2(32 + 256, 16 + (LINE_SPACING * (int)Selections.LanguageLocale)), Color.White);
+
+        base.Draw(gameTime);
     }
 }

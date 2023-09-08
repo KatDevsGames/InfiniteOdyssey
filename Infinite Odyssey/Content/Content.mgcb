@@ -14,6 +14,13 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Fonts/ModalDialog.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/ModalDialog.spritefont
+
 #begin Fonts/SettingsMenu.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -30,6 +37,18 @@
 
 #begin Music/Title.ogg
 /copy:Music/Title.ogg
+
+#begin Sprites/Menu/Menu.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Sprites/Menu/Menu.png
 
 #begin Sprites/Menu/PinchCursor.png
 /importer:TextureImporter
@@ -51,6 +70,9 @@
 
 #begin Text/en-US/LoadMenu.json
 /copy:Text/en-US/LoadMenu.json
+
+#begin Text/en-US/ModalDialog.json
+/copy:Text/en-US/ModalDialog.json
 
 #begin Text/en-US/SettingsMenu.json
 /copy:Text/en-US/SettingsMenu.json

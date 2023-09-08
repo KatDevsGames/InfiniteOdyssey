@@ -26,7 +26,7 @@ public class Game : Microsoft.Xna.Framework.Game
     public RenderTarget2D RenderTarget { get; private set; }
     private Rectangle m_renderDest;
 
-    private readonly Point NATIVE_RESOLUTION = new(1280, 720);
+    public readonly Point NATIVE_RESOLUTION = new(1280, 720);
 
 #pragma warning disable CS8618 //nobody fucking cares, nerd - kat
     public Game(INativeFmodLibrary nativeLibrary)

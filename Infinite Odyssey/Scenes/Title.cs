@@ -43,7 +43,6 @@ public class Title : Scene
 
     private void OnMenuUpDown(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         switch (e.EventType)
         {
@@ -58,7 +57,6 @@ public class Title : Scene
 
     private void OnMenuConfirm(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         switch (m_cursorPos)
         {
@@ -83,7 +81,6 @@ public class Title : Scene
 
     private void OnMenuCancel(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
-        if (!Active) return;
         if (!e.Pressed) return;
         // do something
     }

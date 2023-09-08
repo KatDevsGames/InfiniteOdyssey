@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace InfiniteOdyssey.Extensions;
 
-internal static class EnumEx
+public static class EnumEx
 {
     public static IEnumerable<T> GetFlags<T>(this T value, bool includeZero = false) where T : Enum
     {

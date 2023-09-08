@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using FmodForFoxes;
 using InfiniteOdyssey.Extensions;
+using InfiniteOdyssey.Scenes;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended.Input.InputListeners;
@@ -16,6 +17,8 @@ public class InputMapper
     private readonly KeyboardListener m_keyboardListener = new();
 
     private readonly GamePadListener m_gamePadListener = new();
+
+    private static readonly Predicate<Delegate> CALLBACK_FILTER = d => (d.Target is not Scene s) || s is { Active: true };
 
     public enum MapperMode
     {
@@ -66,25 +69,25 @@ public class InputMapper
             switch (ev)
             {
                 case EventTypes.Up:
-                    Up?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Up?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Down:
-                    Down?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Down?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Left:
-                    Left?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Left?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Right:
-                    Right?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Right?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Confirm:
-                    Confirm?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Confirm?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Cancel:
-                    Cancel?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Cancel?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Menu:
-                    Menu?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Menu?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
             }
         }
@@ -169,37 +172,37 @@ public class InputMapper
                 case EventTypes.MoveDown:
                 case EventTypes.MoveLeft:
                 case EventTypes.MoveRight:
-                    Move?.Invoke((DirectionEventArgs<EventTypes>)e);
+                    Move?.InvokeWhere(CALLBACK_FILTER, (DirectionEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.CameraNudge:
-                    CameraNudge?.Invoke((DirectionEventArgs<EventTypes>)e);
+                    CameraNudge?.InvokeWhere(CALLBACK_FILTER, (DirectionEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Confirm:
-                    Confirm?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Confirm?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Cancel:
-                    Cancel?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Cancel?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Menu:
-                    Menu?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Menu?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Map:
-                    Map?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Map?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Attack:
-                    Attack?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Attack?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Item:
-                    Item?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Item?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.Run:
-                    Run?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    Run?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.ItemCycleLeft:
-                    ItemCycleLeft?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    ItemCycleLeft?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
                 case EventTypes.ItemCycleRight:
-                    ItemCycleRight?.Invoke((ButtonEventArgs<EventTypes>)e);
+                    ItemCycleRight?.InvokeWhere(CALLBACK_FILTER, (ButtonEventArgs<EventTypes>)e);
                     break;
             }
         }

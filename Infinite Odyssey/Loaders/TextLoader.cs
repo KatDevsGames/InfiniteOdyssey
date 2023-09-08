@@ -37,6 +37,7 @@ public class TextLoader
     {
         ("TitleMenu", DictType.Basic),
         ("SettingsMenu", DictType.Basic),
+        ("ModalDialog", DictType.Basic),
         ("LoadMenu", DictType.Template)
     };
 
