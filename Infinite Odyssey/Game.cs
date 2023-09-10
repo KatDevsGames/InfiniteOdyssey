@@ -36,7 +36,7 @@ public class Game : Microsoft.Xna.Framework.Game
         m_nativeLibrary = nativeLibrary;
 
         //Graphics
-        m_graphics = new GraphicsDeviceManager(this);
+        m_graphics = new(this);
         int realX = Settings.DisplayWidth;
         int realY = Settings.DisplayHeight;
         m_graphics.PreferredBackBufferWidth = realX;
@@ -57,7 +57,9 @@ public class Game : Microsoft.Xna.Framework.Game
 
         //Scene Manager
         SceneManager.Add(new Title(this), "Title");
+        SceneManager.Add(new Action(this), "Action");
         SceneManager.Add(new Scenes.Settings(this, false), "Settings");
+        SceneManager.Add(new ModalDialog(this, false), "ModalDialog");
     }
 
     public IEnumerable<DisplayMode> GetValidResolutions() => GraphicsAdapter.DefaultAdapter.SupportedDisplayModes;
@@ -88,7 +90,7 @@ public class Game : Microsoft.Xna.Framework.Game
     protected override void Initialize()
     {
         JsonInitializer.Init();
-        RenderTarget = new RenderTarget2D(m_graphics.GraphicsDevice, 1280, 720);
+        RenderTarget = new(m_graphics.GraphicsDevice, 1280, 720);
 
         SceneManager.Initialize();
         base.Initialize();
@@ -96,7 +98,7 @@ public class Game : Microsoft.Xna.Framework.Game
 
     protected override void LoadContent()
     {
-        SpriteBatch = new SpriteBatch(GraphicsDevice);
+        SpriteBatch = new(GraphicsDevice);
         FmodManager.Init(m_nativeLibrary, FmodInitMode.CoreAndStudio, "Content");
 
         // load content here
@@ -126,7 +128,7 @@ public class Game : Microsoft.Xna.Framework.Game
         GraphicsDevice.SetRenderTarget(RenderTarget);
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        SpriteBatch.Begin();
+        SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
         // put drawing code here
         SceneManager.Draw(gameTime);
         SpriteBatch.End();
@@ -134,14 +136,14 @@ public class Game : Microsoft.Xna.Framework.Game
         GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.Black);
 
-        SpriteBatch.Begin();
+        SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
         SpriteBatch.Draw(RenderTarget, m_renderDest, Color.White);
         SpriteBatch.End();
 
         base.Draw(gameTime);
     }
 
-    Rectangle GetRenderTargetDestination(Point resolution, int preferredBackBufferWidth, int preferredBackBufferHeight)
+    private Rectangle GetRenderTargetDestination(Point resolution, int preferredBackBufferWidth, int preferredBackBufferHeight)
     {
         float resolutionRatio = (float)resolution.X / resolution.Y;
         Point bounds = new(preferredBackBufferWidth, preferredBackBufferHeight);
@@ -161,10 +163,10 @@ public class Game : Microsoft.Xna.Framework.Game
         }
         rectangle.Width = (int)(resolution.X * scale);
         rectangle.Height = (int)(resolution.Y * scale);
-        return CenterRectangle(new Rectangle(Point.Zero, bounds), rectangle);
+        return CenterRectangle(new(Point.Zero, bounds), rectangle);
     }
 
-    static Rectangle CenterRectangle(Rectangle outerRectangle, Rectangle innerRectangle)
+    private static Rectangle CenterRectangle(Rectangle outerRectangle, Rectangle innerRectangle)
     {
         Point delta = outerRectangle.Center - innerRectangle.Center;
         innerRectangle.Offset(delta);

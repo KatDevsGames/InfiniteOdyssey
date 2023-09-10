@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using InfiniteOdyssey.Behaviors;
 using InfiniteOdyssey.Extensions;
 using InfiniteOdyssey.Loaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended.BitmapFonts;
 
 namespace InfiniteOdyssey.Scenes;
 
@@ -26,16 +26,22 @@ public class ModalDialog : MenuBase
     private TextLoader.Locale m_selectedLocale;
     private string? m_selectedLocaleName;
 
-    private readonly DialogType m_type;
-    private readonly DialogResult m_cancelValue;
+    private DialogType m_type;
+    private DialogResult m_cancelValue;
 
-    private readonly string[] m_lines = new string[4];
-    private readonly Vector2[] m_lineMeasurements = new Vector2[4];
-    private readonly int[] m_lineOffsets = new int[4];
+    private string m_prompt;
+    private Vector2 m_promptMeasurement;
+    private Vector2 m_promptOffset;
 
-    private const int OPTION_SPACING = 50;
+    private string[] m_lines;
+    private Vector2[] m_lineMeasurements;
+    private int m_lineMargin;
+    private int[] m_lineOffsetsX;
+    private int m_lineOffsetY;
 
-    private const int CURSOR_NUDGE_X = -8;
+    private const int PROMPT_MARGIN_Y = 16;
+
+    private static readonly Point CURSOR_NUDGE = new(-24, -8);
 
     private static readonly Point BACKGROUND_MARGIN = new(32, 16);
 
@@ -50,31 +56,44 @@ public class ModalDialog : MenuBase
     public enum DialogType
     {
         YesNo = 0,
-        ConfirmCancel = 1,
-        Confirm = 2
+        YesNoCancel = 1,
+        Confirm = 2,
+        ConfirmCancel = 3
     }
 
-    private static readonly int[][] OPTION_INDEXES = new[]
-    {
+    private static readonly string[] OPTION_NAMES = { "yes", "no", "cancel", "confirm" };
+
+    private static readonly int[][] OPTION_INDEXES = {
         new []{ (int)DialogResult.Yes, (int)DialogResult.No },
-        new []{ (int)DialogResult.Confirm, (int)DialogResult.Cancel },
+        new []{ (int)DialogResult.Yes, (int)DialogResult.No, (int)DialogResult.Cancel  },
         new []{ (int)DialogResult.Confirm },
+        new []{ (int)DialogResult.Confirm, (int)DialogResult.Cancel },
     };
 
-    private readonly int[] m_optionIndexes;
+    private int[] m_optionIndexes;
 
-    public ModalDialog(Game game, DialogType type, DialogResult cancelValue, bool active = true) : base(game, active)
+    public ModalDialog(Game game, bool active = true) : base(game, active)
     {
-        m_type = type;
-        m_optionIndexes = OPTION_INDEXES[(int)type];
-        m_cancelValue = cancelValue;
-
         m_textLoader = TextLoader.Instance;
         
         game.InputMapper.Menu.Left += OnMenuLeftRight;
         game.InputMapper.Menu.Right += OnMenuLeftRight;
         game.InputMapper.Menu.Confirm += OnMenuConfirm;
         game.InputMapper.Menu.Cancel += OnMenuCancel;
+    }
+
+    public void SetType(string prompt, DialogType type, DialogResult cancelValue)
+    {
+        m_prompt = prompt;
+        m_type = type;
+        m_optionIndexes = OPTION_INDEXES[(int)type];
+        m_cancelValue = cancelValue;
+        m_cursorPos = m_optionIndexes.IndexOf((int)cancelValue);
+
+        int len = m_optionIndexes.Length;
+        m_lines = new string[len];
+        m_lineMeasurements = new Vector2[len];
+        m_lineOffsetsX = new int[len];
     }
 
     private void OnMenuLeftRight(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
@@ -84,10 +103,10 @@ public class ModalDialog : MenuBase
         {
             case InputMapper.MenuEvents.EventTypes.Left:
                 CycleValue(ref m_cursorPos, -1, m_optionIndexes.Length);
-                return;
+                break;
             case InputMapper.MenuEvents.EventTypes.Right:
                 CycleValue(ref m_cursorPos, 1, m_optionIndexes.Length);
-                return;
+                break;
         }
         SetCursorPos();
     }
@@ -114,7 +133,7 @@ public class ModalDialog : MenuBase
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new PinchCursor(Game));
+        AddBehavior("Cursor", m_cursor = new(Game));
     }
 
     public override void LoadContent()
@@ -122,33 +141,42 @@ public class ModalDialog : MenuBase
         base.LoadContent();
 
         m_font = Game.Content.Load<SpriteFont>("Fonts\\ModalDialog");
-        m_background = GetFrame(FrameColor.Red, 15, 5);
-        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
-        m_cursor.Y = (int)(m_backgroundPosition.Y + BACKGROUND_MARGIN.Y);
 
         ReloadText();
-
         SetCursorPos();
     }
 
     private void ReloadText()
     {
-        m_lines[(int)DialogResult.No] = m_textLoader.GetText("ModalDialog", "no");
-        m_lines[(int)DialogResult.Yes] = m_textLoader.GetText("ModalDialog", "yes");
-        m_lines[(int)DialogResult.Cancel] = m_textLoader.GetText("ModalDialog", "cancel");
-        m_lines[(int)DialogResult.Confirm] = m_textLoader.GetText("ModalDialog", "confirm");
+        m_promptMeasurement = m_font.MeasureString(m_prompt);
+        m_lineMargin = (int)m_promptMeasurement.Y + PROMPT_MARGIN_Y;
 
-        for (int i = 0; i < m_lines.Length; i++)
+        int totalWidth = 32 * m_optionIndexes.Length;
+        for (int i = 0; i < m_optionIndexes.Length; i++)
         {
-            Vector2 measurement = m_lineMeasurements[i] = m_font.MeasureString(m_lines[i]);
-            m_lineOffsets[i] = (i == 0) ? 0 : m_lineOffsets[i - 1] + (int)measurement.X + OPTION_SPACING;
+            string line = m_lines[i] = m_textLoader.GetText("ModalDialog", OPTION_NAMES[m_optionIndexes[i]]);
+            Vector2 measurement = m_lineMeasurements[i] = m_font.MeasureString(line);
+            totalWidth += (int)measurement.X;
+        }
+
+        m_background = GetFrame(FrameColor.Red, (Math.Max((int)m_promptMeasurement.X, totalWidth) / 32) + 2, 5);
+        m_backgroundPosition = new((Game.NATIVE_RESOLUTION.X / 2) - (m_background.Width / 2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
+        
+        m_promptOffset = m_backgroundPosition + new Vector2((m_background.Width / 2) - ((int)m_promptMeasurement.X / 2), BACKGROUND_MARGIN.Y);
+
+        int offsetY = m_lineOffsetY = (int)m_backgroundPosition.Y + BACKGROUND_MARGIN.Y + m_lineMargin;
+        m_cursor.Y = offsetY + (int)(m_lineMeasurements[0].Y / 2) + CURSOR_NUDGE.Y;
+        
+        for (int i = 0; i < m_optionIndexes.Length; i++)
+        {
+            m_lineOffsetsX[i] = (int)((m_backgroundPosition.X + (m_background.Width * ((i + 1) / (float)(m_optionIndexes.Length + 1)))) - (m_lineMeasurements[i].X / 2));
         }
     }
 
     private void SetCursorPos()
     {
         int position = m_cursorPos;
-        m_cursor.X = (int)m_backgroundPosition.Y + BACKGROUND_MARGIN.X +  m_lineOffsets[position] + CURSOR_NUDGE_X;
+        m_cursor.X = m_lineOffsetsX[position] + CURSOR_NUDGE.X;
         m_cursor.Width = (int)m_lineMeasurements[position].X + 32;
     }
 
@@ -156,10 +184,13 @@ public class ModalDialog : MenuBase
     {
         Game.SpriteBatch.Draw(m_background, m_backgroundPosition, Color.White);
 
+        // ReSharper disable once PossibleLossOfFraction
+        Game.SpriteBatch.DrawString(m_font, m_prompt, m_promptOffset, Color.White);
+
         for (int i = 0; i < m_optionIndexes.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, m_backgroundPosition + new Vector2(BACKGROUND_MARGIN.X + m_lineOffsets[i], BACKGROUND_MARGIN.Y), Color.White);
+            Game.SpriteBatch.DrawString(m_font, line, new(m_lineOffsetsX[i], m_lineOffsetY), Color.White);
         }
         
         base.Draw(gameTime);

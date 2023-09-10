@@ -13,5 +13,7 @@
 
   "display": "Display Settings",
   "displayResolution": "Display Resolution",
-  "fullScreen": "Fullscreen"
+  "fullScreen": "Fullscreen",
+
+  "savePrompt": "Settings have changed. Do you wish to save?" 
 }

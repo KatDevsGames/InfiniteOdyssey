@@ -9,7 +9,7 @@ namespace InfiniteOdyssey.Scenes;
 
 public class Settings : MenuBase
 {
-    //private readonly Scene m_modalReturn;
+    public static readonly object RELOAD_SETTINGS = new();
 
     private readonly InfiniteOdyssey.Settings m_settings;
 
@@ -27,6 +27,8 @@ public class Settings : MenuBase
     private int m_selectedLocaleIndex;
     private TextLoader.Locale m_selectedLocale;
     private string? m_selectedLocaleName;
+
+    private string m_savePrompt;
 
 #if DESKTOP
     private readonly string[] m_lines = new string[9];
@@ -111,18 +113,23 @@ public class Settings : MenuBase
         {
             case Selections.MusicVolume:
                 ChangeNormalized(ref m_settings.MusicVolume, reverse ? -VOLUME_STEP : VOLUME_STEP);
+                m_settings.IsDirty = true;
                 break;
             case Selections.SFXVolume:
                 ChangeNormalized(ref m_settings.SFXVolume, reverse ? -VOLUME_STEP : VOLUME_STEP);
+                m_settings.IsDirty = true;
                 break;
             case Selections.DialogVolume:
                 ChangeNormalized(ref m_settings.DialogVolume, reverse ? -VOLUME_STEP : VOLUME_STEP);
+                m_settings.IsDirty = true;
                 break;
             case Selections.TextSpeed:
                 ChangeNormalized(ref m_settings.DialogVolume, reverse ? -TEXT_SPEED_STEP : TEXT_SPEED_STEP);
+                m_settings.IsDirty = true;
                 break;
             case Selections.LanguageLocale:
                 CycleValue(ref m_selectedLocaleIndex, reverse ? -1 : 1, m_locales.Count);
+                m_settings.IsDirty = true;
                 LoadLocale();
                 ReloadText();
                 break;
@@ -159,23 +166,45 @@ public class Settings : MenuBase
         {
             case Selections.NoFlashing:
                 m_settings.NoFlashing = !m_settings.NoFlashing;
+                m_settings.IsDirty = true;
                 break;
             case Selections.NoColors:
                 m_settings.NoColors = !m_settings.NoColors;
+                m_settings.IsDirty = true;
                 break;
             case Selections.InputMap:
                 break;
 #if DESKTOP
             case Selections.Display:
-#endif
                 break;
+#endif
         }
     }
 
     private void OnMenuCancel(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
         if (!e.Pressed) return;
-        Game.SceneManager.Unload();
+        if (m_settings.IsDirty)
+        {
+            ModalDialog md = (ModalDialog)Game.SceneManager.Get("ModalDialog");
+            md.SetType(m_savePrompt, ModalDialog.DialogType.YesNoCancel, ModalDialog.DialogResult.Cancel);
+            Game.SceneManager.Load(md);
+        }
+        else Game.SceneManager.Return(null);
+    }
+
+    public override void ReturnCallback(object? value)
+    {
+        switch (value as ModalDialog.DialogResult?)
+        {
+            case ModalDialog.DialogResult.No:
+                Game.SceneManager.Return(null);
+                break;
+            case ModalDialog.DialogResult.Yes:
+                Game.Settings.CopyFrom(m_settings);
+                Game.SceneManager.Return(RELOAD_SETTINGS);
+                break;
+        }
     }
 
     private void CursorUp()
@@ -194,7 +223,7 @@ public class Settings : MenuBase
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new PinchCursor(Game));
+        AddBehavior("Cursor", m_cursor = new(Game));
     }
 
     public override void LoadContent()
@@ -206,7 +235,7 @@ public class Settings : MenuBase
 
         m_font = Game.Content.Load<SpriteFont>("Fonts\\SettingsMenu");
         m_background = GetFrame(FrameColor.Red, 30, 15);
-        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
+        m_backgroundPosition = new((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
         m_cursor.X = (int)(m_backgroundPosition.X + 16);
 
         ReloadText();
@@ -216,6 +245,7 @@ public class Settings : MenuBase
 
     private void ReloadText()
     {
+        m_savePrompt = m_textLoader.GetText("SettingsMenu", "savePrompt");
 
         m_lines[(int)Selections.NoFlashing] = m_textLoader.GetText("SettingsMenu", "noFlashing");
         m_lines[(int)Selections.NoColors] = m_textLoader.GetText("SettingsMenu", "noColors");

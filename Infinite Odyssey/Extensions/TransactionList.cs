@@ -10,20 +10,20 @@ public class TransactionList<T> : IList<T>
 
     public TransactionList()
     {
-        m_list = new List<T>();
-        m_temp = new List<T>();
+        m_list = new();
+        m_temp = new();
     }
 
     public TransactionList(IEnumerable<T> collection)
     {
-        m_list = new List<T>(collection);
-        m_temp = new List<T>(m_list);
+        m_list = new(collection);
+        m_temp = new(m_list);
     }
 
     public TransactionList(int capacity)
     {
-        m_list = new List<T>(capacity);
-        m_temp = new List<T>(capacity);
+        m_list = new(capacity);
+        m_temp = new(capacity);
     }
 
     public IEnumerator<T> GetEnumerator() => m_list.GetEnumerator();

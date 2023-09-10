@@ -39,31 +39,31 @@ public class MenuBase : Scene
         Color[] data = new Color[TILE_ARRAY_LENGTH];
 
         //top left corner
-        m_menuTexture.CopyTo(newTexture, new Rectangle(origin, TILE_SIZE), Point.Zero);
+        m_menuTexture.CopyTo(newTexture, new(origin, TILE_SIZE), Point.Zero);
 
         //top line
-        m_menuTexture.CopyTo(newTexture, new Rectangle(GetTileOffset(1, 0), TILE_SIZE), new Rectangle(GetTileOffset(1, 0), GetTileOffset(width - 2, 1)));
+        m_menuTexture.CopyTo(newTexture, new(GetTileOffset(1, 0), TILE_SIZE), new Rectangle(GetTileOffset(1, 0), GetTileOffset(width - 2, 1)));
 
         //top right corner
-        m_menuTexture.CopyTo(newTexture, new Rectangle(origin + GetTileOffset(2, 0), TILE_SIZE), GetTileOffset(width - 1, 0));
+        m_menuTexture.CopyTo(newTexture, new(origin + GetTileOffset(2, 0), TILE_SIZE), GetTileOffset(width - 1, 0));
 
         //left line
-        m_menuTexture.CopyTo(newTexture, new Rectangle(GetTileOffset(0, 1), TILE_SIZE), new Rectangle(GetTileOffset(0, 1), GetTileOffset(1, height -2)));
+        m_menuTexture.CopyTo(newTexture, new(GetTileOffset(0, 1), TILE_SIZE), new Rectangle(GetTileOffset(0, 1), GetTileOffset(1, height -2)));
 
         //middle fill
-        m_menuTexture.CopyTo(newTexture, new Rectangle(GetTileOffset(1, 1), TILE_SIZE), new Rectangle(GetTileOffset(1, 1), GetTileOffset(width - 2, height - 2)));
+        m_menuTexture.CopyTo(newTexture, new(GetTileOffset(1, 1), TILE_SIZE), new Rectangle(GetTileOffset(1, 1), GetTileOffset(width - 2, height - 2)));
 
         //right line
-        m_menuTexture.CopyTo(newTexture, new Rectangle(GetTileOffset(2, 1), TILE_SIZE), new Rectangle(GetTileOffset(width-1, 1), GetTileOffset(1, height - 2)));
+        m_menuTexture.CopyTo(newTexture, new(GetTileOffset(2, 1), TILE_SIZE), new Rectangle(GetTileOffset(width-1, 1), GetTileOffset(1, height - 2)));
 
         //bottom left corner
-        m_menuTexture.CopyTo(newTexture, new Rectangle(origin + GetTileOffset(0, 2), TILE_SIZE), GetTileOffset(0, height - 1));
+        m_menuTexture.CopyTo(newTexture, new(origin + GetTileOffset(0, 2), TILE_SIZE), GetTileOffset(0, height - 1));
 
         //bottom line
-        m_menuTexture.CopyTo(newTexture, new Rectangle(GetTileOffset(1, 2), TILE_SIZE), new Rectangle(GetTileOffset(1, height - 1), GetTileOffset(width - 2, 1)));
+        m_menuTexture.CopyTo(newTexture, new(GetTileOffset(1, 2), TILE_SIZE), new Rectangle(GetTileOffset(1, height - 1), GetTileOffset(width - 2, 1)));
 
         //bottom right corner
-        m_menuTexture.CopyTo(newTexture, new Rectangle(origin + GetTileOffset(2, 2), TILE_SIZE), GetTileOffset(width - 1, height - 1));
+        m_menuTexture.CopyTo(newTexture, new(origin + GetTileOffset(2, 2), TILE_SIZE), GetTileOffset(width - 1, height - 1));
         
         return newTexture;
     }

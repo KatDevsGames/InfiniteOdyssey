@@ -37,7 +37,7 @@ public class DialogSet : Dictionary<string, DialogSet.Line>
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
-            template = new TemplatedString(text);
+            template = new(text);
             if (values?.Count > 0)
                 foreach (var value in values) template.Add(value);
         }

@@ -325,7 +325,7 @@ public static class CollectionEx
 
     public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> collection) where K : notnull
     {
-        Dictionary<K, V> result = new Dictionary<K, V>();
+        Dictionary<K, V> result = new();
         foreach (var next in collection)
         {
             result.Add(next.Key, next.Value);

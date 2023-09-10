@@ -10,7 +10,7 @@
 
 #-------------------------------- References --------------------------------#
 
-/reference:..\..\packages\monogame.extended.content.pipeline\3.8.0\tools\MonoGame.Extended.Content.Pipeline.dll
+/reference:..\..\packages\monogame.extended.content.pipeline\3.9.0-alpha0105\tools\MonoGame.Extended.Content.Pipeline.dll
 
 #---------------------------------- Content ---------------------------------#
 
@@ -34,6 +34,11 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:Fonts/TitleMenu.spritefont
+
+#begin Maps/Overworld/Test.tmx
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
+/build:Maps/Overworld/Test.tmx
 
 #begin Music/Title.ogg
 /copy:Music/Title.ogg

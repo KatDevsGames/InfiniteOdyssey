@@ -15,6 +15,24 @@ public class SceneManager
 
     public Scene Get(string sceneName) => m_scenes[sceneName];
 
+    /*public void Load(Scene scene, string name)
+    {
+        Add(scene, name);
+        Load(name);
+    }*/
+
+    public void Load(Scene scene)
+    {
+        scene.LoadContent();
+        if (m_activeScene != null)
+        {
+            m_activeScene.Active = false;
+            m_inactiveScenes.AddFirst(m_activeScene);
+        }
+        m_activeScene = scene;
+        scene.Active = true;
+    }
+
     public void Load(string sceneName)
     {
         Scene scene = m_scenes[sceneName];

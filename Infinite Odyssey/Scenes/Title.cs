@@ -21,13 +21,19 @@ public class Title : Scene
     private readonly string[] m_lines = new string[6];
     private readonly Vector2[] m_lineMeasurements = new Vector2[6];
 #endif
-    // "newGame": "New Game",
-    // "loadGame": "Load Game",
-    // "networkGame": "Network Game",
-    // "settings": "Settings",
-    // "achievements": "Achievements",
-    // "credits": "Credits",
-    // "quit": "Quit"
+
+    private enum Selections
+    {
+        NewGame = 0,
+        LoadGame = 1,
+        NetworkGame = 2,
+        Settings = 3,
+        Achievements = 4,
+        Credits = 5,
+#if DESKTOP
+        Quit = 6
+#endif
+    }
 
     private const int LINE_SPACING = 50;
 
@@ -58,24 +64,28 @@ public class Title : Scene
     private void OnMenuConfirm(InputMapper.ButtonEventArgs<InputMapper.MenuEvents.EventTypes> e)
     {
         if (!e.Pressed) return;
-        switch (m_cursorPos)
+        switch ((Selections)m_cursorPos)
         {
-            case 0: // New Game
+            case Selections.NewGame:
+                Game.SceneManager.Unload(this);
+                Game.SceneManager.Load("Action");
                 return;
-            case 1: // Load Game
+            case Selections.LoadGame:
                 return;
-            case 2: // Network Game
+            case Selections.NetworkGame:
                 return;
-            case 3: // Settings
+            case Selections.Settings:
                 Game.SceneManager.Load("Settings");
                 return;
-            case 4: // Achievements
+            case Selections.Achievements:
                 return;
-            case 5: // Credits
+            case Selections.Credits:
                 return;
-            case 6: // Quit
+#if DESKTOP
+            case Selections.Quit:
                 Environment.Exit(0);
                 return;
+#endif
         }
     }
 
@@ -101,7 +111,7 @@ public class Title : Scene
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new PinchCursor(Game) { X = (100 - 24), Width = 100 });
+        AddBehavior("Cursor", m_cursor = new(Game) { X = (100 - 24), Width = 100 });
     }
 
     public override void LoadContent()
@@ -113,20 +123,31 @@ public class Title : Scene
 
         m_font = Game.Content.Load<SpriteFont>("Fonts\\TitleMenu");
 
-        m_lines[0] = TextLoader.Instance.GetText("TitleMenu", "newGame");
-        m_lines[1] = TextLoader.Instance.GetText("TitleMenu", "loadGame");
-        m_lines[2] = TextLoader.Instance.GetText("TitleMenu", "networkGame");
-        m_lines[3] = TextLoader.Instance.GetText("TitleMenu", "settings");
-        m_lines[4] = TextLoader.Instance.GetText("TitleMenu", "achievements");
-        m_lines[5] = TextLoader.Instance.GetText("TitleMenu", "credits");
+        ReloadText();
+        SetCursorPos();
+    }
+
+    public override void ReturnCallback(object? value)
+    {
+        if (value != Settings.RELOAD_SETTINGS) return;
+        ReloadText();
+        SetCursorPos();
+    }
+
+    private void ReloadText()
+    {
+        m_lines[(int)Selections.NewGame] = TextLoader.Instance.GetText("TitleMenu", "newGame");
+        m_lines[(int)Selections.LoadGame] = TextLoader.Instance.GetText("TitleMenu", "loadGame");
+        m_lines[(int)Selections.NetworkGame] = TextLoader.Instance.GetText("TitleMenu", "networkGame");
+        m_lines[(int)Selections.Settings] = TextLoader.Instance.GetText("TitleMenu", "settings");
+        m_lines[(int)Selections.Achievements] = TextLoader.Instance.GetText("TitleMenu", "achievements");
+        m_lines[(int)Selections.Credits] = TextLoader.Instance.GetText("TitleMenu", "credits");
 #if DESKTOP
-        m_lines[6] = TextLoader.Instance.GetText("TitleMenu", "quit");
+        m_lines[(int)Selections.Quit] = TextLoader.Instance.GetText("TitleMenu", "quit");
 #endif
 
         for (int i = 0; i < m_lines.Length; i++)
             m_lineMeasurements[i] = m_font.MeasureString(m_lines[i]);
-
-        SetCursorPos();
     }
 
     private void SetCursorPos()
@@ -143,7 +164,7 @@ public class Title : Scene
         for (int i = 0; i < m_lines.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, new Vector2(100, 100 + (LINE_SPACING * i)), Color.Black);
+            Game.SpriteBatch.DrawString(m_font, line, new(100, 100 + (LINE_SPACING * i)), Color.Black);
         }
     }
 }

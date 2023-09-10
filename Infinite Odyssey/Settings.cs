@@ -31,6 +31,8 @@ public class Settings : ICloneable
     public const bool FullScreen = true;
 #endif
 
+    public bool IsDirty { get; set; } = false;
+
     private static readonly string BASE_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Watercolor Games", "Peacenet");
 
     public Settings() => Load(0);
@@ -39,7 +41,7 @@ public class Settings : ICloneable
 
     public static bool TryLoad(int saveNum, out Settings value)
     {
-        value = new Settings();
+        value = new();
         return value.Load(saveNum);
     }
 
@@ -73,16 +75,20 @@ public class Settings : ICloneable
             if (j.TryGetValue("displayHeight", out JToken? displayHeight)) DisplayHeight = displayHeight.Value<int>();
             if (j.TryGetValue("fullScreen", out JToken? fullScreen)) FullScreen = fullScreen.Value<bool>();
 
+            IsDirty = false;
             return true;
 #endif
         }
         catch { return false; }
     }
+
+    public void CopyFrom(Settings source) => TryParseJSON(GetJSON());
     
     public void Save(int saveNum)
     {
         string saveFile = Path.Combine(BASE_PATH, $"save_{saveNum}.db");
         File.WriteAllText(saveFile, GetJSON());
+        IsDirty = false;
     }
 
     public string GetJSON()

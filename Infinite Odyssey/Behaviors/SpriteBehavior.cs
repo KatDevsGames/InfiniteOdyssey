@@ -80,7 +80,7 @@ public class SpriteBehavior : SceneBehavior
         int f = Frames[cycleOffset];
         int x = f % m_cols;
         int y = f / m_cols;
-        m_sourceRect = new Rectangle(x, y, RegionWidth, RegionHeight);
+        m_sourceRect = new(x, y, RegionWidth, RegionHeight);
     }
 
     public override void Draw(GameTime gameTime)
@@ -88,6 +88,6 @@ public class SpriteBehavior : SceneBehavior
         SpriteEffects se = SpriteEffects.None;
         if (FlipX) se |= SpriteEffects.FlipHorizontally;
         if (FlipY) se |= SpriteEffects.FlipVertically;
-        Game.SpriteBatch.Draw(Texture, new Vector2(X, Y), m_sourceRect, Color, Rotation, Vector2.Zero, Scale, se, Depth);
+        Game.SpriteBatch.Draw(Texture, new(X, Y), m_sourceRect, Color, Rotation, Vector2.Zero, Scale, se, Depth);
     }
 }
