@@ -41,7 +41,7 @@ public class Settings : ICloneable
 
     public static bool TryLoad(int saveNum, out Settings value)
     {
-        value = new();
+        value = new Settings();
         return value.Load(saveNum);
     }
 

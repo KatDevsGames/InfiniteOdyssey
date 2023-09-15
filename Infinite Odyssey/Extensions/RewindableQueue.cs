@@ -43,16 +43,16 @@ public class RewindableQueue<T> : IEnumerable<T>, IRewindable
         while (m_list.Last != m_last) m_list.RemoveLast();
     }
 
-    private void Update() => m_states.Push(new()
+    private void Update() => m_states.Push(new QueueState
     {
         count = Count,
         first = m_first,
         last = m_last
     });
 
-    public RewindableQueue() => m_list = new();
+    public RewindableQueue() => m_list = new LinkedList<T>();
 
-    public RewindableQueue(IEnumerable<T> collection) => m_list = new(collection);
+    public RewindableQueue(IEnumerable<T> collection) => m_list = new LinkedList<T>(collection);
 
     public IEnumerator<T> GetEnumerator()
     {

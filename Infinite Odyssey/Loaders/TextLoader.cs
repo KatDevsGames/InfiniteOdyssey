@@ -12,7 +12,7 @@ public class TextLoader
 {
     public static TextLoader Instance { get; private set; }
 
-    public static void SetLocale(string locale) => Instance = new(locale);
+    public static void SetLocale(string locale) => Instance = new TextLoader(locale);
 
     public static LocaleManifest Manifest { get; }
 
@@ -86,12 +86,12 @@ public class TextLoader
                     string name = lj["name"]?.Value<string>() ?? throw new SerializationException();
                     string? redirect = lj["redirect"]?.Value<string>();
                     Dictionary<string, string> localeNames = lj["localeNames"]?.ToObject<Dictionary<string, string>>() ?? throw new SerializationException(); ;
-                    locales.Add(code, new(code, name, redirect, localeNames));
+                    locales.Add(code, new Locale(code, name, redirect, localeNames));
                 }
 
                 string? fallback = j["fallback"]?.Value<string>();
 
-                return new(locales, fallback);
+                return new LocaleManifest(locales, fallback);
             }
         }
     }
@@ -133,13 +133,13 @@ public class TextLoader
             if (!string.IsNullOrWhiteSpace(redirect))
             {
                 if (string.Equals(localeCode, fallback))
-                    throw new("The fallback language may not contain a redirect.");
+                    throw new Exception("The fallback language may not contain a redirect.");
 
                 wasRedirected.Add(localeCode);
                 localeCode = redirect;
 
                 if (wasRedirected.Contains(localeCode))
-                    throw new("The locale manifest contained a redirection loop.");
+                    throw new Exception("The locale manifest contained a redirection loop.");
                 goto loadLang;
             }
             m_localeName = locale.Name;
@@ -154,7 +154,7 @@ public class TextLoader
             goto loadLang;
         }
 
-        throw new("The locale was not found and the manifest did not specify a valid fallback.");
+        throw new Exception("The locale was not found and the manifest did not specify a valid fallback.");
     }
 
     public string GetText(string bank, string entry)
@@ -214,7 +214,7 @@ public class TextLoader
                 {
                     var textTable = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(text);
                     templateData.Add(next.name, textTable.ToDictionary(kv =>
-                        new KeyValuePair<string, TemplatedString>(kv.Key, new(kv.Value))));
+                        new KeyValuePair<string, TemplatedString>(kv.Key, new TemplatedString(kv.Value))));
                     break;
                 }
                 case DictType.ItemSet:

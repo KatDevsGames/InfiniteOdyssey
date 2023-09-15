@@ -28,6 +28,8 @@ public class Game : Microsoft.Xna.Framework.Game
 
     public readonly Point NATIVE_RESOLUTION = new(1280, 720);
 
+    public GameState State { get; }
+
 #pragma warning disable CS8618 //nobody fucking cares, nerd - kat
     public Game(INativeFmodLibrary nativeLibrary)
 #pragma warning restore CS8618
@@ -36,7 +38,7 @@ public class Game : Microsoft.Xna.Framework.Game
         m_nativeLibrary = nativeLibrary;
 
         //Graphics
-        m_graphics = new(this);
+        m_graphics = new GraphicsDeviceManager(this);
         int realX = Settings.DisplayWidth;
         int realY = Settings.DisplayHeight;
         m_graphics.PreferredBackBufferWidth = realX;
@@ -47,7 +49,7 @@ public class Game : Microsoft.Xna.Framework.Game
         Content.RootDirectory = "Content";
 
         //Input Mapper
-        InputMapper = new(this);
+        InputMapper = new InputMapper(this);
 
         //Text Loader
         TextLoader.SetLocale(Settings.LanguageLocale ?? CultureInfo.CurrentCulture.Name);
@@ -56,10 +58,10 @@ public class Game : Microsoft.Xna.Framework.Game
         IsMouseVisible = true;
 
         //Scene Manager
-        SceneManager.Add(new Title(this), "Title");
-        SceneManager.Add(new Action(this), "Action");
-        SceneManager.Add(new Scenes.Settings(this, false), "Settings");
-        SceneManager.Add(new ModalDialog(this, false), "ModalDialog");
+        SceneManager.Add(new TitleScene(this), "Title");
+        SceneManager.Add(new ActionScene(this), "Action");
+        SceneManager.Add(new Scenes.SettingsScene(this, false), "Settings");
+        SceneManager.Add(new ModalDialogScene(this, false), "ModalDialog");
     }
 
     public IEnumerable<DisplayMode> GetValidResolutions() => GraphicsAdapter.DefaultAdapter.SupportedDisplayModes;
@@ -90,7 +92,7 @@ public class Game : Microsoft.Xna.Framework.Game
     protected override void Initialize()
     {
         JsonInitializer.Init();
-        RenderTarget = new(m_graphics.GraphicsDevice, 1280, 720);
+        RenderTarget = new RenderTarget2D(m_graphics.GraphicsDevice, 1280, 720);
 
         SceneManager.Initialize();
         base.Initialize();
@@ -98,7 +100,7 @@ public class Game : Microsoft.Xna.Framework.Game
 
     protected override void LoadContent()
     {
-        SpriteBatch = new(GraphicsDevice);
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
         FmodManager.Init(m_nativeLibrary, FmodInitMode.CoreAndStudio, "Content");
 
         // load content here
@@ -163,7 +165,7 @@ public class Game : Microsoft.Xna.Framework.Game
         }
         rectangle.Width = (int)(resolution.X * scale);
         rectangle.Height = (int)(resolution.Y * scale);
-        return CenterRectangle(new(Point.Zero, bounds), rectangle);
+        return CenterRectangle(new Rectangle(Point.Zero, bounds), rectangle);
     }
 
     private static Rectangle CenterRectangle(Rectangle outerRectangle, Rectangle innerRectangle)

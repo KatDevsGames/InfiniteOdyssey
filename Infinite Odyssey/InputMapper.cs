@@ -326,7 +326,7 @@ public class InputMapper
         Action.SetDefaults();
     }
 
-    public void ExportSettings() => Game.Settings.InputMap = new()
+    public void ExportSettings() => Game.Settings.InputMap = new JObject
     {
         {"menu", Menu.ExportMap()},
         {"action", Action.ExportMap()}

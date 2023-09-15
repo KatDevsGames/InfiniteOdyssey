@@ -2,7 +2,7 @@
 
 namespace InfiniteOdyssey.Extensions;
 
-internal static class StringEx
+public static class StringEx
 {
     public static string ToCamelCase(this string value)
     {
@@ -27,7 +27,7 @@ internal static class StringEx
                 if (next >= len) break;
                 segment[j] = value[next];
             }
-            result[i / chopLength] = new(segment, 0, j);
+            result[i / chopLength] = new string(segment, 0, j);
         }
         return result;
     }

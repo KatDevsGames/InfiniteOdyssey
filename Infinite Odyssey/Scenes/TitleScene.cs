@@ -1,12 +1,13 @@
 ﻿using System;
 using InfiniteOdyssey.Behaviors;
 using InfiniteOdyssey.Loaders;
+using InfiniteOdyssey.Randomization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace InfiniteOdyssey.Scenes;
 
-public class Title : Scene
+public class TitleScene : Scene
 {
     private SpriteFont m_font;
 
@@ -39,7 +40,7 @@ public class Title : Scene
 
     private const int CURSOR_NUDGE_Y = -8;
 
-    public Title(Game game, bool active = true) : base(game, active)
+    public TitleScene(Game game, bool active = true) : base(game, active)
     {
         game.InputMapper.Menu.Up += OnMenuUpDown;
         game.InputMapper.Menu.Down += OnMenuUpDown;
@@ -80,6 +81,11 @@ public class Title : Scene
             case Selections.Achievements:
                 return;
             case Selections.Credits:
+#if DEBUG
+                Game.SceneManager.Unload(this);
+                Game.State.Populate(WorldParameters.GetPreset(Preset.Standard));
+                Game.SceneManager.Load(new MapPreviewScene(Game, false));
+#endif
                 return;
 #if DESKTOP
             case Selections.Quit:
@@ -111,7 +117,7 @@ public class Title : Scene
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new(Game) { X = (100 - 24), Width = 100 });
+        AddBehavior("Cursor", m_cursor = new PinchCursor(Game) { X = (100 - 24), Width = 100 });
     }
 
     public override void LoadContent()
@@ -129,7 +135,7 @@ public class Title : Scene
 
     public override void ReturnCallback(object? value)
     {
-        if (value != Settings.RELOAD_SETTINGS) return;
+        if (value != SettingsScene.RELOAD_SETTINGS) return;
         ReloadText();
         SetCursorPos();
     }
@@ -164,7 +170,7 @@ public class Title : Scene
         for (int i = 0; i < m_lines.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, new(100, 100 + (LINE_SPACING * i)), Color.Black);
+            Game.SpriteBatch.DrawString(m_font, line, new Vector2(100, 100 + (LINE_SPACING * i)), Color.Black);
         }
     }
 }

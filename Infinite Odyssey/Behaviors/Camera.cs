@@ -6,7 +6,7 @@ namespace InfiniteOdyssey.Behaviors;
 
 public class Camera : SceneBehavior
 {
-    private OrthographicCamera m_camera;
+    private readonly OrthographicCamera m_camera;
 
     private Vector2 m_position;
     private Vector2 m_nudge;
@@ -25,7 +25,7 @@ public class Camera : SceneBehavior
     public Camera(Game game) : base(game)
     {
         DefaultViewportAdapter viewportadapter = new(Game.GraphicsDevice);
-        m_camera = new(viewportadapter);
+        m_camera = new OrthographicCamera(viewportadapter);
     }
 
     private const int CAMERA_NUDGE_RANGE = 3 * 32;

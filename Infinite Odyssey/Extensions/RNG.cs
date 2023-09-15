@@ -4,8 +4,23 @@ using Newtonsoft.Json;
 
 namespace InfiniteOdyssey.Extensions;
 
-[AttributeUsage(AttributeTargets.Method)]
-public class ConsumesRNGAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor)]
+public class ConsumesRNGAttribute : Attribute
+{
+    public int MinConsumption { get; }
+
+    public int MaxConsumption { get; }
+
+    public ConsumesRNGAttribute() => MinConsumption = MaxConsumption = -1;
+
+    public ConsumesRNGAttribute(int consumption) => MinConsumption = MaxConsumption = consumption;
+
+    public ConsumesRNGAttribute(int minConsumption, int maxConsumption)
+    {
+        MinConsumption = minConsumption;
+        MaxConsumption = maxConsumption;
+    }
+}
 
 [SuppressMessage("ReSharper", "IdentifierTypo")]
 public class RNG
@@ -25,10 +40,15 @@ public class RNG
 
     [JsonProperty(PropertyName = "index")]
     private uint mti;                     // index into mt
+
+    public int Consumption { get; private set; }
         
     public RNG(string seed) : this(seed.GetHashCode()) { }
     public RNG(int seed) : this(unchecked((uint)seed)) { }
     public RNG(uint seed) => RandomInit(seed);
+    public RNG(long seed) : this(unchecked((ulong)seed)) { }
+    public RNG(ulong seed) => RandomInitByArray(unchecked(new[] { (uint)seed, (uint)(seed >> 32) }));
+    public RNG(params uint[] seed) => RandomInitByArray(seed);
 
     [JsonConstructor]
     private RNG(uint[] mt, uint mti)
@@ -37,14 +57,14 @@ public class RNG
         this.mti = mti;
     }
 
-    public void RandomInit(uint seed)
+    private void RandomInit(uint seed)
     {
         mt[0] = seed;
         for (mti = 1; mti < MERS_N; mti++)
             mt[mti] = (1812433253U * (mt[mti - 1] ^ (mt[mti - 1] >> 30)) + mti);
     }
 
-    public void RandomInitByArray(uint[] seeds)
+    private void RandomInitByArray(uint[] seeds)
     {
         // seed by more than 32 bits
         uint i, j;
@@ -108,6 +128,10 @@ public class RNG
         return r * (1.0 / (0xFFFFFFFF + 1.0));
     }
 
+    public long RandomInt64() => unchecked((long)RandomUInt64());
+
+    public ulong RandomUInt64() => RandomUInt32() | (((ulong)RandomUInt32()) << 32);
+
     public int RandomInt32() => unchecked((int)RandomUInt32());
 
     public uint RandomUInt32()
@@ -146,6 +170,8 @@ public class RNG
         y ^= (y << MERS_S) & MERS_B;
         y ^= (y << MERS_T) & MERS_C;
         y ^= y >> MERS_L;
+
+        Consumption++;
         return y;
     }
 }

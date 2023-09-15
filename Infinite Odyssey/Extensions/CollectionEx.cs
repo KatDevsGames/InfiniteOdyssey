@@ -2,11 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection.Emit;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace InfiniteOdyssey.Extensions;
 
 public static class CollectionEx
 {
+    public static void Fill<T>(this IList<T> collection, T item)
+    {
+        for (int i = 0; i < collection.Count; i++)
+            collection[i] = item;
+    }
+
     [ConsumesRNG]
     public static List<T> Shuffle<T>(this List<T> list, RNG _rng)
     {

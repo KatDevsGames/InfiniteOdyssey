@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace InfiniteOdyssey.Scenes;
 
-public class ModalDialog : MenuBase
+public class ModalDialogScene : MenuBase
 {
     private SpriteFont m_font;
 
@@ -72,7 +72,7 @@ public class ModalDialog : MenuBase
 
     private int[] m_optionIndexes;
 
-    public ModalDialog(Game game, bool active = true) : base(game, active)
+    public ModalDialogScene(Game game, bool active = true) : base(game, active)
     {
         m_textLoader = TextLoader.Instance;
         
@@ -133,7 +133,7 @@ public class ModalDialog : MenuBase
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new(Game));
+        AddBehavior("Cursor", m_cursor = new PinchCursor(Game));
     }
 
     public override void LoadContent()
@@ -160,7 +160,7 @@ public class ModalDialog : MenuBase
         }
 
         m_background = GetFrame(FrameColor.Red, (Math.Max((int)m_promptMeasurement.X, totalWidth) / 32) + 2, 5);
-        m_backgroundPosition = new((Game.NATIVE_RESOLUTION.X / 2) - (m_background.Width / 2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
+        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X / 2) - (m_background.Width / 2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
         
         m_promptOffset = m_backgroundPosition + new Vector2((m_background.Width / 2) - ((int)m_promptMeasurement.X / 2), BACKGROUND_MARGIN.Y);
 
@@ -190,7 +190,7 @@ public class ModalDialog : MenuBase
         for (int i = 0; i < m_optionIndexes.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, new(m_lineOffsetsX[i], m_lineOffsetY), Color.White);
+            Game.SpriteBatch.DrawString(m_font, line, new Vector2(m_lineOffsetsX[i], m_lineOffsetY), Color.White);
         }
         
         base.Draw(gameTime);

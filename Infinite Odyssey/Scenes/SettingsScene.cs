@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace InfiniteOdyssey.Scenes;
 
-public class Settings : MenuBase
+public class SettingsScene : MenuBase
 {
     public static readonly object RELOAD_SETTINGS = new();
 
@@ -61,7 +61,7 @@ public class Settings : MenuBase
 #endif
     }
 
-    public Settings(Game game, bool active = true) : base(game, active)
+    public SettingsScene(Game game, bool active = true) : base(game, active)
     {
         m_textLoader = TextLoader.Instance;
         m_settings = game.Settings.Clone();
@@ -141,7 +141,7 @@ public class Settings : MenuBase
         TextLoader.Locale locale = m_locales[m_selectedLocaleIndex];
         m_selectedLocale = locale;
         m_selectedLocaleName = locale.LocalNames.TryGetValue(locale.Code, out string? localeName) ? localeName : locale.Name;
-        m_textLoader = new(locale.Code);
+        m_textLoader = new TextLoader(locale.Code);
 
     }
 
@@ -186,8 +186,8 @@ public class Settings : MenuBase
         if (!e.Pressed) return;
         if (m_settings.IsDirty)
         {
-            ModalDialog md = (ModalDialog)Game.SceneManager.Get("ModalDialog");
-            md.SetType(m_savePrompt, ModalDialog.DialogType.YesNoCancel, ModalDialog.DialogResult.Cancel);
+            ModalDialogScene md = (ModalDialogScene)Game.SceneManager.Get("ModalDialog");
+            md.SetType(m_savePrompt, ModalDialogScene.DialogType.YesNoCancel, ModalDialogScene.DialogResult.Cancel);
             Game.SceneManager.Load(md);
         }
         else Game.SceneManager.Return(null);
@@ -195,12 +195,12 @@ public class Settings : MenuBase
 
     public override void ReturnCallback(object? value)
     {
-        switch (value as ModalDialog.DialogResult?)
+        switch (value as ModalDialogScene.DialogResult?)
         {
-            case ModalDialog.DialogResult.No:
+            case ModalDialogScene.DialogResult.No:
                 Game.SceneManager.Return(null);
                 break;
-            case ModalDialog.DialogResult.Yes:
+            case ModalDialogScene.DialogResult.Yes:
                 Game.Settings.CopyFrom(m_settings);
                 Game.SceneManager.Return(RELOAD_SETTINGS);
                 break;
@@ -223,7 +223,7 @@ public class Settings : MenuBase
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new(Game));
+        AddBehavior("Cursor", m_cursor = new PinchCursor(Game));
     }
 
     public override void LoadContent()
@@ -235,7 +235,7 @@ public class Settings : MenuBase
 
         m_font = Game.Content.Load<SpriteFont>("Fonts\\SettingsMenu");
         m_background = GetFrame(FrameColor.Red, 30, 15);
-        m_backgroundPosition = new((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
+        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
         m_cursor.X = (int)(m_backgroundPosition.X + 16);
 
         ReloadText();

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using InfiniteOdyssey.Behaviors;
 using InfiniteOdyssey.Extensions;
@@ -25,14 +26,14 @@ public abstract class Scene
 
     private const int COROUTINE_REMOVAL_PREALLOC = 128;
 
-    private void StartCoroutine(IEnumerable coroutine)
+    public void StartCoroutine(IEnumerable coroutine)
     {
         m_coroutines.AddLast(coroutine.GetEnumerator());
     }
 
     public bool Active { get; set; }
 
-    protected Game Game { get; }
+    public Game Game { get; }
     
     protected Scene(Game game, bool active = true)
     {
@@ -43,6 +44,8 @@ public abstract class Scene
     public virtual void ReturnCallback(object? value) { }
 
     //singleton version of this?
+    public void AddBehavior(SceneBehavior behavior) => AddBehavior(Guid.NewGuid().ToString("D"), 0, behavior);
+    public void AddBehavior(int priority, SceneBehavior behavior) => AddBehavior(Guid.NewGuid().ToString("D"), priority, behavior);
     public void AddBehavior(string name, SceneBehavior behavior) => AddBehavior(name, 0, behavior);
     public void AddBehavior(string name, int priority, SceneBehavior behavior)
     {
@@ -51,9 +54,19 @@ public abstract class Scene
         behavior.Initialize();
         m_behaviorsName.Add(name, entry);
         if (!m_behaviorsPriority.TryGetValue(priority, out List<SceneBehaviorEntry>? behaviors))
-            m_behaviorsPriority[priority] = behaviors = new();
+            m_behaviorsPriority[priority] = behaviors = new List<SceneBehaviorEntry>();
 
         behaviors.Add(entry);
+    }
+
+    public void RemoveBehavior(SceneBehavior entry)
+    {
+        foreach (var behaviorEntry in m_behaviorsName)
+        {
+            if (!Equals(behaviorEntry.Value.behavior, entry)) continue;
+            RemoveBehavior(behaviorEntry.Key);
+            return;
+        }
     }
 
     public void RemoveBehavior(string name)
