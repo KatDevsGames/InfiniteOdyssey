@@ -1,0 +1,3 @@
+[submodule "MonoGame.Extended"]
+	path = MonoGame.Extended
+	url = https://github.com/KatDevsGames/MonoGame.Extended.git
