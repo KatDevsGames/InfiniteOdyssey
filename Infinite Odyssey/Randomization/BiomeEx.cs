@@ -27,7 +27,7 @@ internal static class BiomeEx
             Biome.Start => Color.Gray,
             Biome.Chaos => Color.Violet,
             Biome.Gate => Color.DarkSlateGray,
-            Biome.Bridge => Color.LightGray,
+            Biome.Bridge => Color.Silver,
             Biome.Phlogiston => Color.White,
             _ => throw new ArgumentOutOfRangeException(nameof(biome), biome, null)
         };

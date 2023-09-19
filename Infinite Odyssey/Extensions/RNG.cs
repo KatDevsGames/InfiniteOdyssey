@@ -59,34 +59,40 @@ public class RNG
 
     private void RandomInit(uint seed)
     {
-        mt[0] = seed;
-        for (mti = 1; mti < MERS_N; mti++)
-            mt[mti] = (1812433253U * (mt[mti - 1] ^ (mt[mti - 1] >> 30)) + mti);
+        unchecked
+        {
+            mt[0] = seed;
+            for (mti = 1; mti < MERS_N; mti++)
+                mt[mti] = (1812433253U * (mt[mti - 1] ^ (mt[mti - 1] >> 30)) + mti);
+        }
     }
 
     private void RandomInitByArray(uint[] seeds)
     {
-        // seed by more than 32 bits
-        uint i, j;
-        int k;
-        int length = seeds.Length;
-        RandomInit(19650218U);
-        if (length <= 0) return;
-        i = 1; j = 0;
-        k = (MERS_N > length ? MERS_N : length);
-        for (; k != 0; k--)
+        unchecked
         {
-            mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 30)) * 1664525U)) + seeds[j] + j;
-            i++; j++;
-            if (i >= MERS_N) { mt[0] = mt[MERS_N - 1]; i = 1; }
-            if (j >= length) j = 0;
+            // seed by more than 32 bits
+            uint i, j;
+            int k;
+            int length = seeds.Length;
+            RandomInit(19650218U);
+            if (length <= 0) return;
+            i = 1; j = 0;
+            k = (MERS_N > length ? MERS_N : length);
+            for (; k != 0; k--)
+            {
+                mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 30)) * 1664525U)) + seeds[j] + j;
+                i++; j++;
+                if (i >= MERS_N) { mt[0] = mt[MERS_N - 1]; i = 1; }
+                if (j >= length) j = 0;
+            }
+            for (k = MERS_N - 1; k != 0; k--)
+            {
+                mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 30)) * 1566083941U)) - i;
+                if (++i >= MERS_N) { mt[0] = mt[MERS_N - 1]; i = 1; }
+            }
+            mt[0] = 0x80000000U; // MSB is 1; assuring non-zero initial array
         }
-        for (k = MERS_N - 1; k != 0; k--)
-        {
-            mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 30)) * 1566083941U)) - i;
-            if (++i >= MERS_N) { mt[0] = mt[MERS_N - 1]; i = 1; }
-        }
-        mt[0] = 0x80000000U; // MSB is 1; assuring non-zero initial array
     }
 
     /// <returns>random integer in the interval min <= x <= max</returns>

@@ -83,7 +83,7 @@ public class TitleScene : Scene
             case Selections.Credits:
 #if DEBUG
                 Game.SceneManager.Unload(this);
-                Game.State.Populate(WorldParameters.GetPreset(Preset.Standard));
+                Game.State.Populate(WorldParameters.GetPreset(Preset.Standard));//, 638305774018347343));
                 Game.SceneManager.Load(new MapPreviewScene(Game, false));
 #endif
                 return;

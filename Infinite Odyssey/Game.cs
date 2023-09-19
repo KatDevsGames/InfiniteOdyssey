@@ -28,7 +28,7 @@ public class Game : Microsoft.Xna.Framework.Game
 
     public readonly Point NATIVE_RESOLUTION = new(1280, 720);
 
-    public GameState State { get; }
+    public GameState State { get; } = new();
 
 #pragma warning disable CS8618 //nobody fucking cares, nerd - kat
     public Game(INativeFmodLibrary nativeLibrary)

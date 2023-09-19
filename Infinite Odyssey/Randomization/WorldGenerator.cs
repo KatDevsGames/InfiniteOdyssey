@@ -14,13 +14,14 @@ public class WorldGenerator
     private readonly Region BORDER_REGION = new() { Biome = Biome.Phlogiston };
     private readonly Region BRIDGE_REGION = new() { Biome = Biome.Bridge };
 
-    public WorldGenerator(WorldParameters parameters) : this(DateTimeOffset.UtcNow.UtcTicks, parameters) { }
+    public WorldGenerator(WorldParameters parameters) : this(parameters.Seed ?? DateTimeOffset.UtcNow.UtcTicks, parameters) { }
 
     public WorldGenerator(long seed, WorldParameters parameters)
     {
         m_rng = new RNG(seed);
         m_world = new World { Seed = seed };
-        m_parameters = parameters;
+        parameters.Seed = seed;
+        m_parameters = parameters;//todo .Clone();
     }
 
     public World Generate()
@@ -56,8 +57,8 @@ public class WorldGenerator
             int y;
             do
             {
-                x = m_rng.IRandom(0, width);
-                y = m_rng.IRandom(0, height);
+                x = m_rng.IRandom(0, width - 1);
+                y = m_rng.IRandom(0, height - 1);
             } while (map[x][y] != null);
             map[x][y] = r;
             r.SeedLocation = (x, y);
@@ -77,7 +78,7 @@ public class WorldGenerator
                 if (location == null) // no room to grow
                 {
                     if (r == regions[0]) { FindRandomEdgeCell(r, true); } // home region can grow into other regions if required
-                    else { remainingRegions.Remove(r); }// no rom to grow means this region is done
+                    else { remainingRegions.Remove(r); }// no room to grow means this region is done
                     continue;
                 }
                 someCell = true;
@@ -114,39 +115,117 @@ public class WorldGenerator
             if (GetBorderCells(pitch).Count > 0) { map[edge.Key.x][edge.Key.y] = BORDER_REGION; }
         }
 
-        //close isolates
-        /*foreach (Region region in Regions)
-        {
-            foreach ((int x, int y) in region.GetLocalPoints())
-            {
-                /*bool allBorder = true;
-                if ((x - 1) >= 0)
-                {
-                    allBorder &= _border.Equals(this[x - 1, y]);
-                }
-                if ((x + 1) < Width)
-                {
-                    allBorder &= _border.Equals(this[x + 1, y]);
-                }
-                if ((y - 1) >= 0)
-                {
-                    allBorder &= _border.Equals(this[x, y - 1]);
-                }
-                if ((y + 1) < Height)
-                {
-                    allBorder &= _border.Equals(this[x, y + 1]);
-                }
-                if (allBorder) { this[x, y] = _border; }*//*
-                    HashSet<(int x, int y)> visited = new HashSet<(int x, int y)>();
-                    FloodAllPoints(region.SeedLocation, region.GetLocalPoints(), visited);
-                    if(!visited.Contains((x,y))) { this[x, y] = _border; }
-                }
-            }*/
+        CloseIsolates();
 
         //put bridges between the regions
         //var bridges = FindRegionalBridges();
         BuildSetBridges();
+        ReclaimBorders();
         //BuildRandomBridges();
+    }
+
+    private void ReclaimBorders()
+    {
+        int width = m_world.Width;
+        int height = m_world.Height;
+        Region?[][] map = m_world.RegionMap;
+
+        List<(int x, int y)> borderCells = GetRegionCells(BORDER_REGION);
+        int reclaims;
+        do
+        {
+            reclaims = 0;
+            foreach ((int x, int y) in borderCells.Shuffle(m_rng).ToArray())
+            {
+                Region? claimant = null;
+                if (x == 1 && y == 10) GC.KeepAlive(BORDER_REGION);
+                if ((x - 1) >= 0)
+                {
+                    Region candidate = (map[x - 1][y]);
+                    if ((candidate != BORDER_REGION) && (claimant != candidate))
+                    {
+                        if (claimant != null) continue;
+                        claimant = candidate;
+                    }
+                }
+                if ((x + 1) < width)
+                {
+                    Region candidate = (map[x + 1][y]);
+                    if ((candidate != BORDER_REGION) && (claimant != candidate))
+                    {
+                        if (claimant != null) continue;
+                        claimant = candidate;
+                    }
+                }
+                if ((y - 1) >= 0)
+                {
+                    Region candidate = (map[x][y - 1]);
+                    if ((candidate != BORDER_REGION) && (claimant != candidate))
+                    {
+                        if (claimant != null) continue;
+                        claimant = candidate;
+                    }
+                }
+                if ((y + 1) < height)
+                {
+                    Region candidate = (map[x][y + 1]);
+                    if ((candidate != BORDER_REGION) && (claimant != candidate))
+                    {
+                        if (claimant != null) continue;
+                        claimant = candidate;
+                    }
+                }
+
+                if (claimant != null)
+                {
+                    map[x][y] = claimant;
+                    borderCells.Remove((x, y));
+                    reclaims += 1;
+                }
+            }
+        } while (reclaims > 0);
+    }
+
+    private void CloseIsolates()
+    {
+        int width = m_world.Width;
+        int height = m_world.Height;
+        Region?[][] map = m_world.RegionMap;
+
+        foreach (Region region in m_world.Regions)
+        {
+            List<(int x, int y)> regionCells = GetRegionCells(region);
+
+
+            HashSet<(int x, int y)> visited = new HashSet<(int x, int y)>();
+            FloodAllPoints(region.SeedLocation, regionCells, visited);
+            foreach ((int x, int y) in regionCells)
+            {
+                if (!visited.Contains((x, y))) map[x][y] = BORDER_REGION;
+            }
+
+            /*foreach ((int x, int y) in regionCells)
+            {
+                bool allBorder = true;
+                if ((x - 1) >= 0)
+                {
+                    allBorder &= BORDER_REGION.Equals(map[x - 1][y]);
+                }
+                if ((x + 1) < width)
+                {
+                    allBorder &= BORDER_REGION.Equals(map[x + 1][y]);
+                }
+                if ((y - 1) >= 0)
+                {
+                    allBorder &= BORDER_REGION.Equals(map[x][y - 1]);
+                }
+                if ((y + 1) < height)
+                {
+                    allBorder &= BORDER_REGION.Equals(map[x][y + 1]);
+                }
+                if (allBorder) { map[x][y] = BORDER_REGION; }
+            }*/
+        }
     }
 
     private enum CellPitch
@@ -174,7 +253,7 @@ public class WorldGenerator
         if ((!ignoreLimits) && (cells.Count >= region.Parameters.MaxCells)) { return null; }
         while (cells.Count > 0)
         {
-            int index = m_rng.IRandom(0, cells.Count);
+            int index = m_rng.IRandom(0, cells.Count - 1);
             (int x, int y) location = cells[index];
 
             if (ignoreNeighbors)
@@ -306,7 +385,7 @@ public class WorldGenerator
                     continue;
                 }
 
-                int bridgeIndex = m_rng.IRandom(0, bridges.Count);
+                int bridgeIndex = m_rng.IRandom(0, bridges.Count - 1);
 
                 var (x, y, h) = bridges[bridgeIndex];
                 var touching = TouchingSegments((x, y), segments).Distinct();
@@ -326,7 +405,7 @@ public class WorldGenerator
                     //taken.TryAdd((c.j, c.i));
                 }
 
-                map[x][y] = BORDER_REGION;
+                map[x][y] = BRIDGE_REGION;
                 bridges.RemoveAt(bridgeIndex);
             }
         }
@@ -419,7 +498,26 @@ public class WorldGenerator
         {
             for (int y = 0; y < height; y++)
             {
-                if (IsNormal((x, y))) { result.Add((x, y)); }
+                if (IsNormal((x, y))) result.Add((x, y));
+            }
+        }
+
+        return result;
+    }
+
+    private List<(int x, int y)> GetRegionCells(Region region)
+    {
+        int width = m_world.Width;
+        int height = m_world.Height;
+        Region?[][] map = m_world.RegionMap;
+
+        List<(int x, int y)> result = new();
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (region.Equals(map[x][y])) result.Add((x, y));
             }
         }
 
@@ -431,7 +529,7 @@ public class WorldGenerator
         Region?[][] map = m_world.RegionMap;
 
         var (x, y) = location;
-        if (map[x][y] is Region) { return true; }
+        if (map[x][y] is { } r) return r.Biome != Biome.Phlogiston;
 
         return (map[x][y]?.Biome ?? Biome.Phlogiston) != Biome.Phlogiston;
     }
@@ -528,7 +626,7 @@ public class WorldGenerator
             case BiomeDistribution.RandomAllowRepeats:
                 return (Biome)((uint)Biome.Normal).GetRandomBit(rng);
             default:
-                throw new ArgumentOutOfRangeException(nameof(parameters.BiomeDistribution), parameters.BiomeDistribution, null);
+                goto case BiomeDistribution.RandomNoRepeats;
         }
     }
 }

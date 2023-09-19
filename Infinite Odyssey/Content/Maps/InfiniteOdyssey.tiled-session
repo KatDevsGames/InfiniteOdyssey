@@ -32,6 +32,7 @@
         "Tilesets/Testing (Terrain).tsx"
     ],
     "project": "InfiniteOdyssey.tiled-project",
+    "property.type": "string",
     "recentFiles": [
         "Tilesets/Testing (Terrain).tsx",
         "Overworld/Test.tmx"

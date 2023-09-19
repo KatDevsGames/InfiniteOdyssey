@@ -3,78 +3,93 @@ using Newtonsoft.Json;
 
 namespace InfiniteOdyssey.Extensions;
 
-[Serializable, JsonConverter(typeof(RangeConverter))]
-public struct Range
+[JsonConverter(typeof(Converter))]
+public readonly struct Range
 {
-    public int Min;
-    public int Max;
+    public readonly uint Minimum;
+    public readonly uint Maximum;
 
-    public bool Contains(int value) => (value >= Min) && (value <= Max);
+    public bool IsOne => (Minimum == 1) && (Maximum == 1);
 
-    [JsonConstructor]
-    public Range(int min, int max)
+    public Range()
     {
-        Min = min;
-        Max = max;
+        Minimum = 1;
+        Maximum = 1;
     }
 
-    public class RangeConverter : JsonConverter
+    public Range(uint maximum)
     {
-        public override bool CanConvert(Type objectType) => typeof(Range).IsAssignableFrom(objectType);
+        Minimum = 1;
+        Maximum = maximum;
+    }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
-        {
-            if (reader.TokenType != JsonToken.StartArray) { throw new JsonSerializationException(); }
-            //reader.Read();
-            try
-            {
-                int min = (int)reader.ReadAsInt32();
-                int max = (int)reader.ReadAsInt32();
-                return new Range(min, max);
-            }
-            finally
-            {
-                reader.Read();
-            }
-        }
+    public Range(uint minimum, uint maximum)
+    {
+        if (minimum > maximum) throw new ArgumentException("The minimum value cannot be greater than the maximum value.");
+        Minimum = minimum;
+        Maximum = maximum;
+    }
 
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+    public void Deconstruct(out uint minimum, out uint maximum)
+    {
+        minimum = Minimum;
+        maximum = Maximum;
+    }
+
+    public static implicit operator (uint minimum, uint maximum)(Range quantityRange)
+        => (quantityRange.Minimum, quantityRange.Maximum);
+
+    public static implicit operator Range((uint minimum, uint maximum) value)
+        => new(value.minimum, value.maximum);
+
+    public static implicit operator Range(uint maximum)
+        => new(maximum);
+
+    public static implicit operator Range(int maximum)
+        => new((uint)maximum);
+
+#if NETCOREAPP
+    public static implicit operator Range(System.Range value)
+        => new((uint)value.Start.Value, (uint)value.End.Value);
+
+    public static implicit operator System.Range(Range value)
+        => new((int)value.Minimum, (int)value.Maximum);
+#endif
+
+    private class Converter : JsonConverter<Range>
+    {
+        public override void WriteJson(JsonWriter writer, Range value, JsonSerializer serializer)
         {
-            Range r = (Range)value;
             writer.WriteStartArray();
-            writer.WriteValue(r.Min);
-            writer.WriteValue(r.Max);
+            writer.WriteValue(value.Minimum);
+            writer.WriteValue(value.Maximum);
             writer.WriteEndArray();
         }
-    }
 
-#if UNITY_EDITOR
-        [CustomPropertyDrawer(typeof(Range))]
-        public class Editor : PropertyDrawer
+        public override Range ReadJson(JsonReader reader, Type objectType, Range existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            private static readonly GUIContent[] labels = {
-                new("Min"),
-                new("Max")
-            };
-
-            public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+            switch (reader.TokenType)
             {
-                var min = property.FindPropertyRelative("Min");
-                var max = property.FindPropertyRelative("Max");
-                EditorGUI.LabelField(position, property.name);
-                position.x += EditorGUIUtility.labelWidth;
-                
-                position.height = 18f;
-                position.width = 200f;
-                EditorGUI.BeginChangeCheck();
-                int[] values = {min.intValue, max.intValue};
-                EditorGUI.MultiIntField(position, labels, values);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    min.intValue = values[0];
-                    max.intValue = values[1];
-                }
+                case JsonToken.StartArray:
+                    try
+                    {
+                        reader.Read();
+                        uint min = (uint?)reader.Value ?? 1;
+                        reader.Read();
+                        uint max = (uint?)reader.Value ?? 1;
+                        return new Range(min, max);
+                    }
+                    finally
+                    {
+                        reader.Read();
+                    }
+                case JsonToken.Integer:
+                    return new Range((uint?)reader.Value ?? 1);
+                case JsonToken.Null:
+                    return new Range(1);
+                default:
+                    throw new JsonSerializationException();
             }
         }
-#endif
+    }
 }

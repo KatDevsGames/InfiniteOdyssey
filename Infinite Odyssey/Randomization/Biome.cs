@@ -29,6 +29,8 @@ public enum Biome : uint
     Chaos = 0x0002_0000,
     Gate = 0x0004_0000,
 
+    //BridgeHoriz = 0x1000_0000,
+    //BridgeVert = 0x2000_0000,
     Bridge = 0x4000_0000,
     Phlogiston = 0x8000_0000,
 

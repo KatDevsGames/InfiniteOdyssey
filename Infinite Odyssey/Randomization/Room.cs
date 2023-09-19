@@ -42,14 +42,28 @@ public class Room
     /// <summary>
     /// Each 23x40 map cell along the edge of the room may contain doors.
     /// These go clockwise, starting on the leftmost cell along the top wall.
-    /// A zero-or-null value denotes the lack of a door.//todo zero-or-null
     /// There is one entry for every cell-span along each wall, centered within that cell-span.
     /// (e.g. A 4x3 room will contain 14 entries. 4 left-to-right along the top wall followed by
     /// 3 top-to-bottom along the right wall followed by 4 right-to-left along the bottom wall
     /// followed by, 3 bottom-to-top along the left wall.)
     /// </summary>
     [JsonProperty(PropertyName = "doorStates")]
-    public object?[] DoorStates;
+    public DoorState[] DoorStates;
+
+    public struct DoorState
+    {
+        public DoorOpenState OpenState;
+        public int Width;
+    }
+
+    public enum DoorOpenState
+    {
+        Sealed = 0,
+        Open,
+        Closed,
+        Locked,
+        Missing
+    }
 
     public static Room[][] GetEmptyMap(int width, int height)
     {

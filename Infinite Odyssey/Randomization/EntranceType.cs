@@ -1,11 +1,8 @@
 ﻿using System;
-using InfiniteOdyssey.Extensions.Converters;
-using Newtonsoft.Json;
 
 namespace InfiniteOdyssey.Randomization;
 
-[Flags]
-[Serializable, JsonConverter(typeof(FlagsEnumConverter<EntranceType>))]
+[Serializable]
 public enum EntranceType
 {
     NoChange = 0x00,

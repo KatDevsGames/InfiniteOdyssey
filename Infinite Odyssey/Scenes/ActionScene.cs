@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using InfiniteOdyssey.Behaviors;
 using InfiniteOdyssey.Behaviors.Actors;
+using InfiniteOdyssey.Extensions;
 using MonoGame.Extended.Tiled;
 using MonoGame.Extended.Tiled.Renderers;
 using Microsoft.Xna.Framework;
@@ -71,6 +74,7 @@ public class ActionScene : Scene
         m_isLoaded = true;
         Game.InputMapper.Mode = InputMapper.MapperMode.Action;
         TiledMap tileMap = m_tileMap = Game.Content.Load<TiledMap>("Maps\\Overworld\\Test");
+        tileMap.GetVisibleLayersByType("Variation").ToArray();
         m_loadedTilemaps.Add("Maps\\Overworld\\Test");
         m_tileMapRenderer = new TiledMapRenderer(Game.GraphicsDevice, tileMap);
         Point tilemapSize = m_tilemapSize = new Point(tileMap.WidthInPixels, tileMap.HeightInPixels);

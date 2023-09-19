@@ -11,5 +11,216 @@
     "properties": [
     ],
     "propertyTypes": [
+        {
+            "id": 2,
+            "name": "Direction",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "North",
+                "South",
+                "East",
+                "West"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffff0000",
+            "drawFill": true,
+            "id": 10,
+            "members": [
+                {
+                    "name": "LevelMax",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "LevelMin",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Pattern",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Probability",
+                    "type": "float",
+                    "value": 0
+                }
+            ],
+            "name": "Enemy",
+            "type": "class",
+            "useAs": [
+                "object",
+                "project"
+            ]
+        },
+        {
+            "id": 21,
+            "name": "EntranceType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "NoChange",
+                "ForceWalking",
+                "Intro"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "id": 20,
+            "name": "ExitType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "Seamless",
+                "Scroll",
+                "Door",
+                "LockedDoor",
+                "AreaChange",
+                "Mirror",
+                "Scripted"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "id": 19,
+            "name": "Item",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "Grapple"
+            ],
+            "valuesAsFlags": true
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 17,
+            "members": [
+                {
+                    "name": "Item",
+                    "propertyType": "Item",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "TransitionIndex",
+                    "type": "int",
+                    "value": 0
+                }
+            ],
+            "name": "Requirement",
+            "type": "class",
+            "useAs": [
+                "property",
+                "layer",
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffffaaff",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "Gap",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Transition",
+                    "type": "string",
+                    "value": ""
+                }
+            ],
+            "name": "Seal",
+            "type": "class",
+            "useAs": [
+                "layer",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffffff00",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+                {
+                    "name": "Direction",
+                    "propertyType": "Direction",
+                    "type": "string",
+                    "value": "North"
+                },
+                {
+                    "name": "EntranceType",
+                    "propertyType": "EntranceType",
+                    "type": "string",
+                    "value": "NoChange"
+                },
+                {
+                    "name": "ExitType",
+                    "propertyType": "ExitType",
+                    "type": "string",
+                    "value": "Seamless"
+                }
+            ],
+            "name": "Transition",
+            "type": "class",
+            "useAs": [
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ff00ffff",
+            "drawFill": true,
+            "id": 9,
+            "members": [
+                {
+                    "name": "Item",
+                    "propertyType": "Item",
+                    "type": "string",
+                    "value": ""
+                }
+            ],
+            "name": "Treasure",
+            "type": "class",
+            "useAs": [
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 11,
+            "members": [
+                {
+                    "name": "LevelMax",
+                    "type": "int",
+                    "value": 2147483647
+                },
+                {
+                    "name": "LevelMin",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Probability",
+                    "type": "float",
+                    "value": 1
+                }
+            ],
+            "name": "Variation",
+            "type": "class",
+            "useAs": [
+                "layer",
+                "project"
+            ]
+        }
     ]
 }
