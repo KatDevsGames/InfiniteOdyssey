@@ -11,10 +11,10 @@
     "fileStates": {
         "Overworld/Test.tmx": {
             "scale": 0.75,
-            "selectedLayer": 1,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 400.66666666666663,
-                "y": 370.6666666666667
+                "x": 619.3333333333333,
+                "y": -20
             }
         },
         "Tilesets/Testing (Terrain).tsx": {
@@ -32,7 +32,7 @@
         "Tilesets/Testing (Terrain).tsx"
     ],
     "project": "InfiniteOdyssey.tiled-project",
-    "property.type": "string",
+    "property.type": "int",
     "recentFiles": [
         "Tilesets/Testing (Terrain).tsx",
         "Overworld/Test.tmx"

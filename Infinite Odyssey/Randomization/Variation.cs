@@ -5,7 +5,8 @@ namespace InfiniteOdyssey.Randomization;
 
 public class Variation
 {
-    public TiledMapObjectLayer Layer;
+    public string Name;
+    public TiledMapLayer Layer;
     public Range Level;
     public float Probability;
 }

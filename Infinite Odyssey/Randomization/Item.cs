@@ -5,5 +5,6 @@ namespace InfiniteOdyssey.Randomization;
 [Serializable]
 public enum Item : uint
 {
-    
+    Grapple,
+    Dash
 }

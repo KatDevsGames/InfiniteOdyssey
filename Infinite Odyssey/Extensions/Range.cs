@@ -6,8 +6,8 @@ namespace InfiniteOdyssey.Extensions;
 [JsonConverter(typeof(Converter))]
 public readonly struct Range
 {
-    public readonly uint Minimum;
-    public readonly uint Maximum;
+    public readonly int Minimum;
+    public readonly int Maximum;
 
     public bool IsOne => (Minimum == 1) && (Maximum == 1);
 
@@ -17,44 +17,39 @@ public readonly struct Range
         Maximum = 1;
     }
 
-    public Range(uint maximum)
+    public Range(int maximum)
     {
         Minimum = 1;
         Maximum = maximum;
     }
 
-    public Range(uint minimum, uint maximum)
+    public Range(int minimum, int maximum)
     {
         if (minimum > maximum) throw new ArgumentException("The minimum value cannot be greater than the maximum value.");
         Minimum = minimum;
         Maximum = maximum;
     }
 
-    public void Deconstruct(out uint minimum, out uint maximum)
+    public void Deconstruct(out int minimum, out int maximum)
     {
         minimum = Minimum;
         maximum = Maximum;
     }
 
-    public static implicit operator (uint minimum, uint maximum)(Range quantityRange)
+    public static implicit operator (int minimum, int maximum)(Range quantityRange)
         => (quantityRange.Minimum, quantityRange.Maximum);
 
-    public static implicit operator Range((uint minimum, uint maximum) value)
+    public static implicit operator Range((int minimum, int maximum) value)
         => new(value.minimum, value.maximum);
 
-    public static implicit operator Range(uint maximum)
-        => new(maximum);
-
     public static implicit operator Range(int maximum)
-        => new((uint)maximum);
-
-#if NETCOREAPP
+        => new(maximum);
+    
     public static implicit operator Range(System.Range value)
-        => new((uint)value.Start.Value, (uint)value.End.Value);
+        => new(value.Start.Value, value.End.Value);
 
     public static implicit operator System.Range(Range value)
-        => new((int)value.Minimum, (int)value.Maximum);
-#endif
+        => new(value.Minimum, value.Maximum);
 
     private class Converter : JsonConverter<Range>
     {
@@ -74,9 +69,9 @@ public readonly struct Range
                     try
                     {
                         reader.Read();
-                        uint min = (uint?)reader.Value ?? 1;
+                        int min = (int?)reader.Value ?? 1;
                         reader.Read();
-                        uint max = (uint?)reader.Value ?? 1;
+                        int max = (int?)reader.Value ?? 1;
                         return new Range(min, max);
                     }
                     finally
@@ -84,7 +79,7 @@ public readonly struct Range
                         reader.Read();
                     }
                 case JsonToken.Integer:
-                    return new Range((uint?)reader.Value ?? 1);
+                    return new Range((int?)reader.Value ?? 1);
                 case JsonToken.Null:
                     return new Range(1);
                 default:

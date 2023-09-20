@@ -91,7 +91,8 @@
             "storageType": "string",
             "type": "enum",
             "values": [
-                "Grapple"
+                "Grapple",
+                "Dash"
             ],
             "valuesAsFlags": true
         },
@@ -101,24 +102,21 @@
             "id": 17,
             "members": [
                 {
-                    "name": "Item",
-                    "propertyType": "Item",
+                    "name": "FromTransition",
                     "type": "string",
                     "value": ""
                 },
                 {
-                    "name": "TransitionIndex",
-                    "type": "int",
-                    "value": 0
+                    "name": "Item",
+                    "propertyType": "Item",
+                    "type": "string",
+                    "value": ""
                 }
             ],
             "name": "Requirement",
             "type": "class",
             "useAs": [
-                "property",
-                "layer",
-                "object",
-                "project"
+                "property"
             ]
         },
         {

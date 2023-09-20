@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Collisions;
 using MonoGame.Extended;
+using MonoGame.Extended.Content.Pipeline.Tiled;
 
 namespace InfiniteOdyssey.Scenes;
 
@@ -74,7 +75,9 @@ public class ActionScene : Scene
         m_isLoaded = true;
         Game.InputMapper.Mode = InputMapper.MapperMode.Action;
         TiledMap tileMap = m_tileMap = Game.Content.Load<TiledMap>("Maps\\Overworld\\Test");
-        tileMap.GetVisibleLayersByType("Variation").ToArray();
+        var test = tileMap.GetTransitions();
+        var req = test.First().Requirements;
+        GC.KeepAlive(req);
         m_loadedTilemaps.Add("Maps\\Overworld\\Test");
         m_tileMapRenderer = new TiledMapRenderer(Game.GraphicsDevice, tileMap);
         Point tilemapSize = m_tilemapSize = new Point(tileMap.WidthInPixels, tileMap.HeightInPixels);
