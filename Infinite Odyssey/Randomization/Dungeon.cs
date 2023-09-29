@@ -4,8 +4,11 @@ using Newtonsoft.Json;
 namespace InfiniteOdyssey.Randomization;
 
 [Serializable]
-public class Dungeon : MapContainer
+public class Dungeon
 {
+    [JsonProperty(PropertyName = "id")]
+    public Guid ID;
+
     [JsonProperty(PropertyName = "seed")]
     public long Seed;
 
@@ -15,9 +18,18 @@ public class Dungeon : MapContainer
     [JsonProperty(PropertyName = "level")]
     public int Level;
 
-    [JsonProperty(PropertyName = "map")]
-    public Room[][] Map;
-
     [JsonProperty(PropertyName = "boss")]
     public object? Boss;
+
+    [JsonProperty(PropertyName = "entrances")]
+    public Transition[] Entrances;
+
+    [JsonProperty(PropertyName = "floors")]
+    public Floor[] Floors;
+}
+
+public class Floor : MapContainer
+{
+    [JsonProperty(PropertyName = "id")]
+    public Guid ID;
 }

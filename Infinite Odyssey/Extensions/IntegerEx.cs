@@ -25,4 +25,20 @@ public static class IntegerEx
     [ConsumesRNG(0, 1)]
     public static int GetRandomBit(this int value, RNG rng)
         => unchecked((int)GetRandomBit((uint)value, rng));
+
+    public static int AddClamped(this int value, int addend)
+    {
+        int result = unchecked(value + addend);
+        if ((addend > 0 && result < value) || (addend < 0 && result > value))
+            return addend > 0 ? int.MaxValue : int.MinValue;
+        return result;
+    }
+
+    public static int AddClamped(this int value, int addend, int minValue, int maxValue)
+    {
+        int result = unchecked(value + addend);
+        if ((addend > 0 && result < value) || (addend < 0 && result > value))
+            result = addend > 0 ? int.MaxValue : int.MinValue;
+        return Math.Clamp(result, minValue, maxValue);
+    }
 }

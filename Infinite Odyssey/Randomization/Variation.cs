@@ -8,5 +8,10 @@ public class Variation
     public string Name;
     public TiledMapLayer Layer;
     public Range Level;
-    public float Probability;
+    public float Probability = 1f;
+
+    public Variation(string name)
+    {
+        Name = name;
+    }
 }

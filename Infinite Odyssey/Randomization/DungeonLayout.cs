@@ -6,5 +6,6 @@ namespace InfiniteOdyssey.Randomization;
 public enum DungeonLayout
 {
     Sprawling,
+    Balanced,
     Linear
 }

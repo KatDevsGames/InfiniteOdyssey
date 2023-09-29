@@ -5,11 +5,10 @@ namespace InfiniteOdyssey.Randomization;
 [Serializable]
 public enum ExitType
 {
-    Seamless,
-    Scroll,
+    Standard = 0,
     Door,
     LockedDoor,
-    AreaChange,
+    Dungeon,
     Mirror,
     Scripted
 }

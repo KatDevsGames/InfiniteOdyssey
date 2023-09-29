@@ -1,4 +1,4 @@
-﻿using InfiniteOdyssey.Scenes;
+﻿using InfiniteOdyssey.Scenes.Action;
 
 namespace InfiniteOdyssey.Behaviors.Actors.Monsters;
 

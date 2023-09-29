@@ -1,11 +1,14 @@
 ﻿using System;
 using InfiniteOdyssey.Behaviors;
+using InfiniteOdyssey.Extensions;
 using InfiniteOdyssey.Loaders;
 using InfiniteOdyssey.Randomization;
+using InfiniteOdyssey.Scenes.MapPreview;
+using InfiniteOdyssey.Scenes.Settings;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace InfiniteOdyssey.Scenes;
+namespace InfiniteOdyssey.Scenes.Title;
 
 public class TitleScene : Scene
 {
@@ -83,7 +86,7 @@ public class TitleScene : Scene
             case Selections.Credits:
 #if DEBUG
                 Game.SceneManager.Unload(this);
-                Game.State.Populate(WorldParameters.GetPreset(Preset.Standard));//, 638305774018347343));
+                Game.State.Populate(Game, WorldParameters.GetPreset(Preset.Standard));//, 638305774018347343));
                 Game.SceneManager.Load(new MapPreviewScene(Game, false));
 #endif
                 return;
@@ -117,7 +120,7 @@ public class TitleScene : Scene
 
     public override void Initialize()
     {
-        AddBehavior("Cursor", m_cursor = new PinchCursor(Game) { X = (100 - 24), Width = 100 });
+        AddBehavior("Cursor", m_cursor = new PinchCursor(Game) { X = 100 - 24, Width = 100 });
     }
 
     public override void LoadContent()
@@ -160,7 +163,7 @@ public class TitleScene : Scene
     {
         int position = m_cursorPos;
         Vector2 lineM = m_lineMeasurements[position];
-        m_cursor.Y = 100 + (LINE_SPACING * position) + (int)(lineM.Y / 2) + CURSOR_NUDGE_Y;
+        m_cursor.Y = 100 + LINE_SPACING * position + (int)(lineM.Y / 2) + CURSOR_NUDGE_Y;
         m_cursor.Width = (int)lineM.X + 32;
     }
 
@@ -170,7 +173,7 @@ public class TitleScene : Scene
         for (int i = 0; i < m_lines.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, new Vector2(100, 100 + (LINE_SPACING * i)), Color.Black);
+            Game.SpriteBatch.DrawString(m_font, line, new Vector2(100, 100 + LINE_SPACING * i), Color.Black, DrawDepth.Menu);
         }
     }
 }

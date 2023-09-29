@@ -95,6 +95,17 @@ public class RNG
         }
     }
 
+
+    /// <returns>random integer in the interval 0 <= x <= max</returns>
+    public int IRandom(int max) => IRandom(0, max);
+
+    /// <returns>random integer in the interval range.Minimum <= x <= range.Maximum</returns>
+    public int IRandom(Range range) => IRandom(range.Minimum, range.Maximum);
+
+
+    /// <returns>random integer in the interval range.Minimum <= x <= range.Maximum</returns>
+    public int IRandom(Range range, double skew) => IRandom(range.Minimum, range.Maximum, skew);
+
     /// <returns>random integer in the interval min <= x <= max</returns>
     public int IRandom(int min, int max)
     {
@@ -106,7 +117,22 @@ public class RNG
             return int.MinValue;
         return r;
     }
-        
+
+    /// <returns>random integer in the interval min <= x <= max</returns>
+    public int IRandom(int min, int max, double skew)
+    {
+        int r;
+        r = (int)((max - min + 1) * (RandomDouble() * skew)) + min; // multiply interval with random and truncate
+        if (r > max)
+            r = max;
+        if (max < min)
+            return int.MinValue;
+        return r;
+    }
+
+    /// <returns>random integer in the interval 0 <= x <= max</returns>
+    public uint IRandom(uint max) => IRandom(0, max);
+
     /// <returns>random integer in the interval min <= x <= max</returns>
     public uint IRandom(uint min, uint max)
     {

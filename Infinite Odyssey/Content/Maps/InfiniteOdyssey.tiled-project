@@ -12,6 +12,37 @@
     ],
     "propertyTypes": [
         {
+            "id": 23,
+            "name": "Biome",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "Unset",
+                "Field",
+                "Forest",
+                "Mountain",
+                "Volcano",
+                "Lake",
+                "Ocean",
+                "Desert",
+                "Canyon",
+                "Swamp",
+                "Frozen",
+                "Wasteland",
+                "Ruins",
+                "Cavern",
+                "Jungle",
+                "Sky",
+                "Void",
+                "Start",
+                "Chaos",
+                "Gate",
+                "Bridge",
+                "Phlogiston"
+            ],
+            "valuesAsFlags": false
+        },
+        {
             "id": 2,
             "name": "Direction",
             "storageType": "string",
@@ -99,6 +130,25 @@
         {
             "color": "#ffa0a0a4",
             "drawFill": true,
+            "id": 22,
+            "members": [
+                {
+                    "name": "Biome",
+                    "propertyType": "Biome",
+                    "type": "string",
+                    "value": "Unset"
+                }
+            ],
+            "name": "Map",
+            "type": "class",
+            "useAs": [
+                "map",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
             "id": 17,
             "members": [
                 {
@@ -178,12 +228,6 @@
             "drawFill": true,
             "id": 9,
             "members": [
-                {
-                    "name": "Item",
-                    "propertyType": "Item",
-                    "type": "string",
-                    "value": ""
-                }
             ],
             "name": "Treasure",
             "type": "class",

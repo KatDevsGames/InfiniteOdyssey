@@ -1,8 +1,11 @@
 ﻿using System;
+using InfiniteOdyssey.Extensions;
 using Newtonsoft.Json;
+using Range = InfiniteOdyssey.Extensions.Range;
 
 namespace InfiniteOdyssey.Randomization;
 
+[Serializable]
 public class WorldParameters
 {
     [JsonProperty(PropertyName = "version")]
@@ -11,23 +14,17 @@ public class WorldParameters
     [JsonProperty(PropertyName = "seed")]
     public long? Seed;
 
-    [JsonProperty(PropertyName = "minWidth")]
-    public int MinWidth;
+    [JsonProperty(PropertyName = "preset")]
+    public Preset? Preset;
 
-    [JsonProperty(PropertyName = "maxWidth")]
-    public int MaxWidth;
+    [JsonProperty(PropertyName = "width")]
+    public Range Width;
 
-    [JsonProperty(PropertyName = "minHeight")]
-    public int MinHeight;
+    [JsonProperty(PropertyName = "height")]
+    public Range Height;
 
-    [JsonProperty(PropertyName = "maxHeight")]
-    public int MaxHeight;
-
-    [JsonProperty(PropertyName = "minLevel")]
-    public int MinLevel;
-
-    [JsonProperty(PropertyName = "maxLevel")]
-    public int MaxLevel;
+    [JsonProperty(PropertyName = "level")]
+    public Range Level;
 
     [JsonProperty(PropertyName = "regions")]
     public RegionParameters?[] Regions;
@@ -44,95 +41,84 @@ public class WorldParameters
     [JsonProperty(PropertyName = "saveLayout")]
     public SaveLayout? SaveLayout;
 
-    public static WorldParameters GetPreset(Preset preset, long? seed = null)
+    public static void InitializeRegions(RNG rng, WorldParameters worldParameters, RegionParameters?[] regions)
     {
-        WorldParameters wp = new() { Seed = seed };
+        for (int i = 0; i < regions.Length; i++)
+        {
+            regions[i] ??= RegionParameters.GetPreset(rng, worldParameters);
+        }
+    }
+
+    public static WorldParameters GetPreset(Preset preset) => GetPreset(preset, new RNG(DateTimeOffset.UtcNow.UtcTicks));
+
+    public static WorldParameters GetPreset(Preset preset, long seed) => GetPreset(preset, new RNG(seed));
+
+    public static WorldParameters GetPreset(Preset preset, RNG rng)
+    {
+        WorldParameters wp = new() { Seed = rng.RandomInt64() };
+        wp.Preset = preset;
         switch (preset)
         {
-            case Preset.Beginner:
-                wp.MinWidth = 8;
-                wp.MinHeight = 8;
-                wp.MaxWidth = 12;
-                wp.MaxHeight = 12;
-                wp.MinLevel = 1;
-                wp.MaxLevel = 6;
+            case Randomization.Preset.Beginner:
+                wp.Width = 8..12;
+                wp.Height = 8..12;
+                wp.Level = 1..6;
                 wp.BossDistribution = Randomization.BossDistribution.ByBiome;
                 wp.KeyStyle = Randomization.KeyStyle.NoKeys;
                 wp.Regions = new RegionParameters[6];
                 break;
-            case Preset.Standard:
-                wp.MinWidth = 24;
-                wp.MinHeight = 24;
-                wp.MaxWidth = 40;
-                wp.MaxHeight = 40;
-                wp.MinLevel = 1;
-                wp.MaxLevel = 8;
+            case Randomization.Preset.Standard:
+                wp.Width = 24..40;
+                wp.Height = 24..40;
+                wp.Level = 1..8;
                 wp.BossDistribution = Randomization.BossDistribution.ByBiome;
                 wp.KeyStyle = Randomization.KeyStyle.DungeonRestricted;
                 wp.Regions = new RegionParameters[8];
                 break;
-            case Preset.Hardcore:
-                wp.MinWidth = 24;
-                wp.MinHeight = 24;
-                wp.MaxWidth = 40;
-                wp.MaxHeight = 40;
-                wp.MinLevel = 4;
-                wp.MaxLevel = 8;
+            case Randomization.Preset.Hardcore:
+                wp.Width = 24..40;
+                wp.Height = 24..40;
+                wp.Level = 4..8;
                 wp.BossDistribution = Randomization.BossDistribution.ByBiome;
                 wp.KeyStyle = Randomization.KeyStyle.DungeonRestricted;
                 wp.Regions = new RegionParameters[8];
                 break;
-            case Preset.Nightmare:
-                wp.MinWidth = 40;
-                wp.MinHeight = 40;
-                wp.MaxWidth = 56;
-                wp.MaxHeight = 56;
-                wp.MinLevel = 5;
-                wp.MaxLevel = 9;
+            case Randomization.Preset.Nightmare:
+                wp.Width = 40..56;
+                wp.Height = 40..56;
+                wp.Level = 5..9;
                 wp.BossDistribution = Randomization.BossDistribution.RandomNoRepeats;
                 wp.KeyStyle = Randomization.KeyStyle.DungeonRestricted;
                 wp.Regions = new RegionParameters[8];
                 break;
-            case Preset.Quick:
-                wp.MinWidth = 8;
-                wp.MinHeight = 8;
-                wp.MaxWidth = 12;
-                wp.MaxHeight = 12;
-                wp.MinLevel = 1;
-                wp.MaxLevel = 8;
+            case Randomization.Preset.Quick:
+                wp.Width = 8..12;
+                wp.Height = 8..12;
+                wp.Level = 1..8;
                 wp.BossDistribution = Randomization.BossDistribution.ByBiome;
                 wp.KeyStyle = Randomization.KeyStyle.DungeonRestricted;
                 wp.Regions = new RegionParameters[6];
                 break;
-            case Preset.CompactHard:
-                wp.MinWidth = 8;
-                wp.MinHeight = 8;
-                wp.MaxWidth = 12;
-                wp.MaxHeight = 12;
-                wp.MinLevel = 5;
-                wp.MaxLevel = 9;
+            case Randomization.Preset.CompactHard:
+                wp.Width = 8..12;
+                wp.Height = 8..12;
+                wp.Level = 5..9;
                 wp.BossDistribution = Randomization.BossDistribution.RandomNoRepeats;
                 wp.KeyStyle = Randomization.KeyStyle.DungeonRestricted;
                 wp.Regions = new RegionParameters[6];
                 break;
-            case Preset.Big:
-                wp.MinWidth = 56;
-                wp.MinHeight = 56;
-                wp.MaxWidth = 70;
-                wp.MaxHeight = 70;
-                wp.MinLevel = 1;
-                wp.MaxLevel = 8;
+            case Randomization.Preset.Big:
+                wp.Width = 56..70;
+                wp.Height = 56..70;
+                wp.Level = 1..8;
                 wp.BossDistribution = Randomization.BossDistribution.ByBiome;
                 wp.KeyStyle = Randomization.KeyStyle.DungeonRestricted;
                 wp.Regions = new RegionParameters[8];
                 break;
-            case Preset.Chaos:
-                wp.MinWidth = 24;
-                wp.MinHeight = 24;
-                wp.MaxWidth = 40;
-                wp.MaxHeight = 40;
-                wp.MinLevel = 1;
-                wp.MaxLevel = 8;
+            case Randomization.Preset.Chaos:
+                wp.Width = 24..40;
+                wp.Height = 24..40;
+                wp.Level = 1..8;
                 wp.BossDistribution = Randomization.BossDistribution.RandomAllowRepeats;
                 wp.KeyStyle = Randomization.KeyStyle.Generic;
                 wp.Regions = new RegionParameters[8];
@@ -140,6 +126,7 @@ public class WorldParameters
             default:
                 throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
         }
+        InitializeRegions(rng, wp, wp.Regions);
         return wp;
     }
 }

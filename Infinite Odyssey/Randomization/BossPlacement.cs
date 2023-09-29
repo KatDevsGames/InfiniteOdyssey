@@ -3,9 +3,8 @@
 namespace InfiniteOdyssey.Randomization;
 
 [Serializable]
-public enum ItemType : uint
+public enum BossPlacement
 {
-    Minor,
-    Major,
-    Quest
+    BossAtEnd,
+    BossKeyAtEnd
 }

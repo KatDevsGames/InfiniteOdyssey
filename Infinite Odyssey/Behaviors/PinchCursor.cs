@@ -20,7 +20,7 @@ public class PinchCursor : SceneBehavior
 
     public override void LoadContent()
     {
-        m_sprite = new SpriteBehavior(Game, "Sprites\\Menu\\PinchCursor", 16, 16, new[] { 0, 1 }, 0.2, true);
+        m_sprite = new SpriteBehavior(Game, "Sprites\\Menu\\PinchCursor", 16, 16, new[] { 0, 1 }, 0.2, true, DrawDepth.Cursor);
     }
 
     public override void Update(GameTime gameTime)

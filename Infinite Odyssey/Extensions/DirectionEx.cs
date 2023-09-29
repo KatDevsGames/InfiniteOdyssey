@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace InfiniteOdyssey.Extensions;
 
+[Flags]
 public enum Direction4
 {
     North = 1,
@@ -11,6 +12,7 @@ public enum Direction4
     West = 8
 }
 
+[Flags]
 public enum Direction8
 {
     North = 1,
@@ -35,4 +37,13 @@ public static class DirectionEx
         if (absX > absY) return (x > 0) ? Direction4.East : Direction4.West;
         return (y > 0) ? Direction4.North : Direction4.South;
     }
+
+    public static Direction4 GetOpposite(this Direction4 direction) =>
+        direction switch
+        {
+            Direction4.North => Direction4.South,
+            Direction4.South => Direction4.North,
+            Direction4.East => Direction4.West,
+            Direction4.West => Direction4.East
+        };
 }

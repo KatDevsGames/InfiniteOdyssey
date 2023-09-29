@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace InfiniteOdyssey.Randomization;
@@ -6,63 +8,49 @@ namespace InfiniteOdyssey.Randomization;
 [Serializable]
 public class Room
 {
+    [JsonProperty(PropertyName = "id")]
+    public Guid ID;
+
     [JsonProperty(PropertyName = "seed")]
     public long Seed;
 
-    [JsonProperty(PropertyName = "level")]
-    public int Level;
+    [JsonProperty(PropertyName = "template")]
+    private string TemplateName => Template.Name;
 
     [JsonIgnore]
-    public int X;
+    public RoomTemplate Template;
 
     [JsonIgnore]
-    public int Y;
+    public Point Location;
 
     [JsonIgnore]
-    public int Width;
+    public Rectangle Bounds => new(Location, Template.Size);
 
-    [JsonIgnore]
-    public int Height;
-
-    /// <summary>
-    /// The name of the tilemap that this cell uses.
-    /// </summary>
-    [JsonProperty(PropertyName = "tileMap")]
-    public string TileMap;
-
-    /// <summary>
-    /// These correspond to any pickups in the room be they freestanding, hidden, or in chests.
-    /// They are indexed as they appear in the room, starting at the upper-leftmost cell, scanning rightward,
-    /// and, when the end of a line is reached, moving to the leftmost-cell of the next lower line.
-    /// (Objects are scanned much in the way English-language text is normally read.)
-    /// </summary>
-    [JsonProperty(PropertyName = "items")]
-    public object[] Items;
-
-    /// <summary>
-    /// Each 23x40 map cell along the edge of the room may contain doors.
-    /// These go clockwise, starting on the leftmost cell along the top wall.
-    /// There is one entry for every cell-span along each wall, centered within that cell-span.
-    /// (e.g. A 4x3 room will contain 14 entries. 4 left-to-right along the top wall followed by
-    /// 3 top-to-bottom along the right wall followed by 4 right-to-left along the bottom wall
-    /// followed by, 3 bottom-to-top along the left wall.)
-    /// </summary>
     [JsonProperty(PropertyName = "doorStates")]
-    public DoorState[] DoorStates;
+    public Dictionary<string, DoorState> DoorStates;
 
-    public struct DoorState
-    {
-        public DoorOpenState OpenState;
-        public int Width;
-    }
+    [JsonProperty(PropertyName = "treasure")]
+    public Dictionary<string, object> Treasure;
 
-    public enum DoorOpenState
+    [JsonProperty(PropertyName = "enemies")]
+    public Dictionary<string, object> Enemies;
+
+    [Serializable]
+    public enum DoorState
     {
         Sealed = 0,
         Open,
         Closed,
         Locked,
         Missing
+    }
+
+    [JsonConstructor]
+    private Room() { }
+
+    public Room(RoomTemplate template)
+    {
+        Template = template;
     }
 
     public static Room[][] GetEmptyMap(int width, int height)

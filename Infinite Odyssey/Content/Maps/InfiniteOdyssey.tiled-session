@@ -5,16 +5,16 @@
     },
     "activeFile": "Overworld/Test.tmx",
     "expandedProjectPaths": [
-        "Overworld",
-        "Dungeons"
+        "Dungeons",
+        "Overworld"
     ],
     "fileStates": {
         "Overworld/Test.tmx": {
-            "scale": 0.75,
+            "scale": 1.5,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 619.3333333333333,
-                "y": -20
+                "x": 621,
+                "y": -16.66666666666663
             }
         },
         "Tilesets/Testing (Terrain).tsx": {
@@ -28,14 +28,13 @@
     "map.layerDataFormat": null,
     "map.width": 80,
     "openFiles": [
-        "Overworld/Test.tmx",
-        "Tilesets/Testing (Terrain).tsx"
+        "Overworld/Test.tmx"
     ],
     "project": "InfiniteOdyssey.tiled-project",
-    "property.type": "int",
+    "property.type": "Biome",
     "recentFiles": [
-        "Tilesets/Testing (Terrain).tsx",
-        "Overworld/Test.tmx"
+        "Overworld/Test.tmx",
+        "Tilesets/Testing (Terrain).tsx"
     ],
     "tileset.lastUsedFormat": "tsx"
 }

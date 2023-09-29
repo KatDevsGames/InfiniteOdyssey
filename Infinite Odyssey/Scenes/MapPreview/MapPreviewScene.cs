@@ -4,7 +4,7 @@ using InfiniteOdyssey.Randomization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace InfiniteOdyssey.Scenes;
+namespace InfiniteOdyssey.Scenes.MapPreview;
 
 public class MapPreviewScene : Scene
 {
@@ -17,7 +17,7 @@ public class MapPreviewScene : Scene
 
     public MapPreviewScene(Game game, bool active = true) : base(game, active)
     {
-        m_screenRectangle = new(new Point(0, 0), Game.NATIVE_RESOLUTION);
+        m_screenRectangle = new Rectangle(new Point(0, 0), Game.NATIVE_RESOLUTION);
     }
 
     public override void LoadContent()

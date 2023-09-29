@@ -7,7 +7,7 @@ using InfiniteOdyssey.Loaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace InfiniteOdyssey.Scenes;
+namespace InfiniteOdyssey.Scenes.ModalDialog;
 
 public class ModalDialogScene : MenuBase
 {
@@ -75,7 +75,7 @@ public class ModalDialogScene : MenuBase
     public ModalDialogScene(Game game, bool active = true) : base(game, active)
     {
         m_textLoader = TextLoader.Instance;
-        
+
         game.InputMapper.Menu.Left += OnMenuLeftRight;
         game.InputMapper.Menu.Right += OnMenuLeftRight;
         game.InputMapper.Menu.Confirm += OnMenuConfirm;
@@ -159,17 +159,17 @@ public class ModalDialogScene : MenuBase
             totalWidth += (int)measurement.X;
         }
 
-        m_background = GetFrame(FrameColor.Red, (Math.Max((int)m_promptMeasurement.X, totalWidth) / 32) + 2, 5);
-        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X / 2) - (m_background.Width / 2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
-        
-        m_promptOffset = m_backgroundPosition + new Vector2((m_background.Width / 2) - ((int)m_promptMeasurement.X / 2), BACKGROUND_MARGIN.Y);
+        m_background = GetFrame(FrameColor.Red, Math.Max((int)m_promptMeasurement.X, totalWidth) / 32 + 2, 5);
+        m_backgroundPosition = new Vector2(Game.NATIVE_RESOLUTION.X / 2 - m_background.Width / 2, Game.NATIVE_RESOLUTION.Y / 2 - m_background.Height / 2);
+
+        m_promptOffset = m_backgroundPosition + new Vector2(m_background.Width / 2 - (int)m_promptMeasurement.X / 2, BACKGROUND_MARGIN.Y);
 
         int offsetY = m_lineOffsetY = (int)m_backgroundPosition.Y + BACKGROUND_MARGIN.Y + m_lineMargin;
         m_cursor.Y = offsetY + (int)(m_lineMeasurements[0].Y / 2) + CURSOR_NUDGE.Y;
-        
+
         for (int i = 0; i < m_optionIndexes.Length; i++)
         {
-            m_lineOffsetsX[i] = (int)((m_backgroundPosition.X + (m_background.Width * ((i + 1) / (float)(m_optionIndexes.Length + 1)))) - (m_lineMeasurements[i].X / 2));
+            m_lineOffsetsX[i] = (int)(m_backgroundPosition.X + m_background.Width * ((i + 1) / (float)(m_optionIndexes.Length + 1)) - m_lineMeasurements[i].X / 2);
         }
     }
 
@@ -182,17 +182,17 @@ public class ModalDialogScene : MenuBase
 
     public override void Draw(GameTime gameTime)
     {
-        Game.SpriteBatch.Draw(m_background, m_backgroundPosition, Color.White);
+        Game.SpriteBatch.Draw(m_background, m_backgroundPosition, DrawDepth.Modal);
 
         // ReSharper disable once PossibleLossOfFraction
-        Game.SpriteBatch.DrawString(m_font, m_prompt, m_promptOffset, Color.White);
+        Game.SpriteBatch.DrawString(m_font, m_prompt, m_promptOffset, DrawDepth.Modal);
 
         for (int i = 0; i < m_optionIndexes.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, new Vector2(m_lineOffsetsX[i], m_lineOffsetY), Color.White);
+            Game.SpriteBatch.DrawString(m_font, line, new Vector2(m_lineOffsetsX[i], m_lineOffsetY), DrawDepth.Modal);
         }
-        
+
         base.Draw(gameTime);
     }
 }

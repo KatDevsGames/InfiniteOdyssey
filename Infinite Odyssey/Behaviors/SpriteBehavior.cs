@@ -15,7 +15,7 @@ public class SpriteBehavior : SceneBehavior
 
     public bool FlipY { get; set; }
 
-    public float Depth { get; set; }
+    public DrawDepth Depth { get; set; }
 
     public Vector2 Scale { get; set; } = Vector2.One;
 
@@ -46,11 +46,11 @@ public class SpriteBehavior : SceneBehavior
 
     private bool m_firstCycle;
 
-    public SpriteBehavior(Game game, string assetName, int regionWidth, int regionHeight, int[] frames, double frameDuration, bool looping)
-        :this(game, game.Content.Load<Texture2D>(assetName), regionWidth, regionHeight, frames, frameDuration, looping){}
+    public SpriteBehavior(Game game, string assetName, int regionWidth, int regionHeight, int[] frames, double frameDuration, bool looping, DrawDepth depth)
+        :this(game, game.Content.Load<Texture2D>(assetName), regionWidth, regionHeight, frames, frameDuration, looping, depth) {}
 
 
-    public SpriteBehavior(Game game, Texture2D texture, int regionWidth, int regionHeight, int[] frames, double frameDuration, bool looping) : base(game)
+    public SpriteBehavior(Game game, Texture2D texture, int regionWidth, int regionHeight, int[] frames, double frameDuration, bool looping, DrawDepth depth) : base(game)
     {
         Texture = texture;
         RegionWidth = regionWidth;
@@ -58,6 +58,7 @@ public class SpriteBehavior : SceneBehavior
         Frames = frames;
         FrameDuration = frameDuration;
         Looping = looping;
+        Depth = depth;
 
         m_rows = texture.Height / regionHeight;
         m_cols = texture.Width / regionWidth;
@@ -88,6 +89,6 @@ public class SpriteBehavior : SceneBehavior
         SpriteEffects se = SpriteEffects.None;
         if (FlipX) se |= SpriteEffects.FlipHorizontally;
         if (FlipY) se |= SpriteEffects.FlipVertically;
-        Game.SpriteBatch.Draw(Texture, new Vector2(X, Y), m_sourceRect, Color, Rotation, Vector2.Zero, Scale, se, Depth);
+        Game.SpriteBatch.Draw(Texture, new Vector2(X, Y), m_sourceRect, Color, Rotation, Vector2.Zero, Scale, se, (float)Depth);
     }
 }

@@ -51,6 +51,18 @@ public readonly struct Range
     public static implicit operator System.Range(Range value)
         => new(value.Minimum, value.Maximum);
 
+    public static Range operator +(Range a, int b) => new(a.Minimum + b, a.Maximum + b);
+    public static Range operator +(int a, Range b) => new(b.Minimum + a, b.Maximum + a);
+
+    public static Range operator -(Range a, int b) => new(a.Minimum - b, a.Maximum - b);
+    public static Range operator -(int a, Range b) => new(b.Minimum - a, b.Maximum - a);
+
+    public static Range operator *(Range a, int b) => new(a.Minimum * b, a.Maximum * b);
+    public static Range operator *(int a, Range b) => new(b.Minimum * a, b.Maximum * a);
+
+    public static Range operator /(Range a, int b) => new(a.Minimum / b, a.Maximum / b);
+    public static Range operator /(int a, Range b) => new(b.Minimum / a, b.Maximum / a);
+
     private class Converter : JsonConverter<Range>
     {
         public override void WriteJson(JsonWriter writer, Range value, JsonSerializer serializer)

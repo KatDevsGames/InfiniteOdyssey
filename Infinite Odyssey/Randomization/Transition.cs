@@ -1,18 +1,39 @@
-﻿using System.Collections.Generic;
-using InfiniteOdyssey.Extensions;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace InfiniteOdyssey.Randomization;
 
 public class Transition
 {
-    public string Name;
-    public Direction4 Direction = Direction4.North;
-    public ExitType ExitType = ExitType.Seamless;
-    public EntranceType EntranceType = EntranceType.NoChange;
-    public List<Requirement> Requirements = new();
+    [JsonIgnore] public Room Room;
 
-    public Transition(string name)
+    [JsonProperty(PropertyName = "room")]
+    private Guid RoomID => Room.ID;
+
+    [JsonIgnore]
+    public TransitionTemplate Template;
+
+    [JsonProperty(PropertyName = "transition")]
+    private string TemplateName => Template.Name;
+
+    [JsonIgnore]
+    private Room DestinationRoom;
+
+    [JsonIgnore]
+    public Transition DestinationTransition;
+
+    [JsonProperty(PropertyName = "destination")]
+    private string DestinationName => Template.Name;
+
+    [JsonProperty(PropertyName = "destinationRoom")]
+    private Guid DestinationRoomID => DestinationRoom.ID;
+
+    [JsonConstructor]
+    private Transition() { }
+
+    public Transition(Room room, TransitionTemplate template)
     {
-        Name = name;
+        Room = room;
+        Template = template;
     }
 }

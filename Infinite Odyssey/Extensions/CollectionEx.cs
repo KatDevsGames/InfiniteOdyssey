@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace InfiniteOdyssey.Extensions;
 
@@ -377,23 +378,44 @@ public static class CollectionEx
         return false;
     }
 
+    public static bool TryIncrement<K>(this IDictionary<K, int> dictionary, K key)
+        => TryDecrement(dictionary, key, int.MaxValue, out _);
+
+    public static bool TryIncrement<K>(this IDictionary<K, int> dictionary, K key, int maximum)
+        => TryDecrement(dictionary, key, maximum, out _);
+
+    public static bool TryIncrement<K>(this IDictionary<K, int> dictionary, K key, out int newValue)
+        => TryDecrement(dictionary, key, int.MaxValue, out newValue);
+
+    public static bool TryIncrement<K>(this IDictionary<K, int> dictionary, K key, int maximum, out int newValue)
+    {
+        if (!dictionary.TryGetValue(key, out newValue)) newValue = 0;
+        if (newValue >= maximum) return false;
+        dictionary[key] = ++newValue;
+        return true;
+    }
+
+    public static bool TryDecrement<K>(this IDictionary<K, int> dictionary, K key)
+        => TryDecrement(dictionary, key, 0, out _);
+
+    public static bool TryDecrement<K>(this IDictionary<K, int> dictionary, K key, int minimum)
+        => TryDecrement(dictionary, key, minimum, out _);
+
+    public static bool TryDecrement<K>(this IDictionary<K, int> dictionary, K key, out int newValue)
+        => TryDecrement(dictionary, key, 0, out newValue);
+
+    public static bool TryDecrement<K>(this IDictionary<K, int> dictionary, K key, int minimum, out int newValue)
+    {
+        if (!dictionary.TryGetValue(key, out newValue)) newValue = 0;
+        if (newValue <= minimum) return false;
+        dictionary[key] = --newValue;
+        return true;
+    }
+
     public static T TakeRandom<T>(this IEnumerable<T> collection, RNG rng)
     {
         int max = collection.Count() - 1;
         return collection.Skip(rng.IRandom(0, max)).First();
-    }
-
-    public static List<T> Resize<T>(this List<T> list, int sz, T c)
-    {
-        int cur = list.Count;
-        if (sz < cur)
-            list.RemoveRange(sz, cur - sz);
-        else if (sz > cur)
-        {
-            if (sz > list.Capacity) { list.Capacity = sz; }
-            list.AddRange(Enumerable.Repeat(c, sz - cur));
-        }
-        return list;
     }
 
     public static int Find<T>(this T[] list, Predicate<T> predicate)
@@ -405,7 +427,35 @@ public static class CollectionEx
         return -1;
     }
 
-    public static List<T> Resize<T>(this List<T> list, int sz) where T : new() => Resize(list, sz, default);
+    public static List<T> Resize<T>(this List<T> list, int newSize) => Resize(list, newSize, () => default(T));
+
+    public static List<T> Resize<T>(this List<T> list, int newSize, T value)
+        => Resize(list, newSize, () => value);
+
+    public static List<T> Resize<T>(this List<T> list, int newSize, Func<T> valueSource)
+    {
+        int cur = list.Count;
+        if (newSize < cur) list.RemoveRange(newSize, cur - newSize);
+        else if (newSize > cur)
+        {
+            if (newSize > list.Capacity) { list.Capacity = newSize; }
+            list.AddRange(Enumerable.Repeat(valueSource(), newSize - cur));
+        }
+        return list;
+    }
+
+    public static List<List<T>> Resize<T>(this List<List<T>> list, int newX, int newY)
+        => Resize(list, newX, newY, () => default(T));
+
+    public static List<List<T>> Resize<T>(this List<List<T>> list, int newX, int newY, T value)
+        => Resize(list, newX, newY, () => value);
+
+    public static List<List<T>> Resize<T>(this List<List<T>> list, int newX, int newY, Func<T> valueSource)
+    {
+        list.Resize(newX, () => new());
+        foreach (List<T> subList in list) subList.Resize(newY, valueSource());
+        return list;
+    }
 
     public static V Get<K, V>(this Dictionary<K, V> dictionary, K key) where V : new() where K : notnull
     {

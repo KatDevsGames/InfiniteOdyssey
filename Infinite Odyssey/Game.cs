@@ -5,6 +5,10 @@ using FmodForFoxes;
 using InfiniteOdyssey.Extensions.Converters;
 using InfiniteOdyssey.Loaders;
 using InfiniteOdyssey.Scenes;
+using InfiniteOdyssey.Scenes.Action;
+using InfiniteOdyssey.Scenes.ModalDialog;
+using InfiniteOdyssey.Scenes.Settings;
+using InfiniteOdyssey.Scenes.Title;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -26,7 +30,13 @@ public class Game : Microsoft.Xna.Framework.Game
     public RenderTarget2D RenderTarget { get; private set; }
     private Rectangle m_renderDest;
 
-    public readonly Point NATIVE_RESOLUTION = new(1280, 720);
+    public static readonly Point NATIVE_RESOLUTION = new(1280, 720);
+
+    public static readonly Point TILE_SIZE = new(32, 32);
+
+    public static readonly Point TILES_PER_SCREEN = new(40, 23); // 40 x 22.5
+
+    public static readonly Point PIXELS_PER_SCREEN = TILE_SIZE * TILES_PER_SCREEN;
 
     public GameState State { get; } = new();
 
@@ -60,7 +70,7 @@ public class Game : Microsoft.Xna.Framework.Game
         //Scene Manager
         SceneManager.Add(new TitleScene(this), "Title");
         SceneManager.Add(new ActionScene(this), "Action");
-        SceneManager.Add(new Scenes.SettingsScene(this, false), "Settings");
+        SceneManager.Add(new SettingsScene(this, false), "Settings");
         SceneManager.Add(new ModalDialogScene(this, false), "ModalDialog");
     }
 

@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using InfiniteOdyssey.Behaviors;
+using InfiniteOdyssey.Extensions;
 using InfiniteOdyssey.Loaders;
+using InfiniteOdyssey.Scenes.ModalDialog;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace InfiniteOdyssey.Scenes;
+namespace InfiniteOdyssey.Scenes.Settings;
 
 public class SettingsScene : MenuBase
 {
@@ -235,7 +237,7 @@ public class SettingsScene : MenuBase
 
         m_font = Game.Content.Load<SpriteFont>("Fonts\\SettingsMenu");
         m_background = GetFrame(FrameColor.Red, 30, 15);
-        m_backgroundPosition = new Vector2((Game.NATIVE_RESOLUTION.X/2)-(m_background.Width/2), (Game.NATIVE_RESOLUTION.Y / 2) - (m_background.Height / 2));
+        m_backgroundPosition = new Vector2(Game.NATIVE_RESOLUTION.X / 2 - m_background.Width / 2, Game.NATIVE_RESOLUTION.Y / 2 - m_background.Height / 2);
         m_cursor.X = (int)(m_backgroundPosition.X + 16);
 
         ReloadText();
@@ -267,21 +269,21 @@ public class SettingsScene : MenuBase
     {
         int position = m_cursorPos;
         Vector2 lineM = m_lineMeasurements[position];
-        m_cursor.Y = (int)m_backgroundPosition.Y + 16 + (LINE_SPACING * position) + (int)(lineM.Y / 2) + CURSOR_NUDGE_Y;
+        m_cursor.Y = (int)m_backgroundPosition.Y + 16 + LINE_SPACING * position + (int)(lineM.Y / 2) + CURSOR_NUDGE_Y;
         m_cursor.Width = (int)lineM.X + 16;
     }
 
     public override void Draw(GameTime gameTime)
     {
-        Game.SpriteBatch.Draw(m_background, m_backgroundPosition, Color.White);
+        Game.SpriteBatch.Draw(m_background, m_backgroundPosition, DrawDepth.Menu);
 
         for (int i = 0; i < m_lines.Length; i++)
         {
             string line = m_lines[i];
-            Game.SpriteBatch.DrawString(m_font, line, m_backgroundPosition + new Vector2(32, 16 + (LINE_SPACING * i)), Color.White);
+            Game.SpriteBatch.DrawString(m_font, line, m_backgroundPosition + new Vector2(32, 16 + LINE_SPACING * i), DrawDepth.Menu);
         }
 
-        Game.SpriteBatch.DrawString(m_font, m_selectedLocaleName, m_backgroundPosition + new Vector2(32 + 256, 16 + (LINE_SPACING * (int)Selections.LanguageLocale)), Color.White);
+        Game.SpriteBatch.DrawString(m_font, m_selectedLocaleName, m_backgroundPosition + new Vector2(32 + 256, 16 + LINE_SPACING * (int)Selections.LanguageLocale), DrawDepth.Menu);
 
         base.Draw(gameTime);
     }

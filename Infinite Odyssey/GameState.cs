@@ -1,35 +1,51 @@
-﻿using InfiniteOdyssey.Randomization;
+﻿using System;
+using InfiniteOdyssey.Randomization;
+using Newtonsoft.Json;
 
 namespace InfiniteOdyssey;
 
+[Serializable]
 public class GameState
 {
+    [JsonProperty(PropertyName = "parameters")]
     public WorldParameters Parameters;
 
+    [JsonProperty(PropertyName = "world")]
     public World World;
 
-    public object Player;
+    [JsonProperty(PropertyName = "playerState")]
+    public PlayerState PlayerState;
 
-    public void Populate(WorldParameters parameters)
-    {
-        Parameters = parameters;
-        WorldGenerator gen = new(parameters);
-        World = gen.Generate();
-        Player = new object();
-    }
+    public GameState() { }
 
-    public void Populate(long seed, WorldParameters parameters)
-    {
-        Parameters = parameters;
-        WorldGenerator gen = new(seed, parameters);
-        World = gen.Generate();
-        Player = new object();
-    }
-
-    public void Populate(WorldParameters parameters, World world, object player)
+    [JsonConstructor]
+    public GameState(WorldParameters parameters, World world, PlayerState playerState)
     {
         Parameters = parameters;
         World = world;
-        Player = player;
+        PlayerState = playerState;
+    }
+
+    public void Populate(Game game, WorldParameters parameters)
+    {
+        Parameters = parameters;
+        WorldGenerator gen = new(game, parameters);
+        World = gen.Generate();
+        PlayerState = new PlayerState();
+    }
+
+    public void Populate(Game game, long seed, WorldParameters parameters)
+    {
+        Parameters = parameters;
+        WorldGenerator gen = new(game, seed, parameters);
+        World = gen.Generate();
+        PlayerState = new PlayerState();
+    }
+
+    public void Populate(WorldParameters parameters, World world, PlayerState playerState)
+    {
+        Parameters = parameters;
+        World = world;
+        PlayerState = playerState;
     }
 }
