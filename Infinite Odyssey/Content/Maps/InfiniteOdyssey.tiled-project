@@ -137,6 +137,12 @@
                     "propertyType": "Biome",
                     "type": "string",
                     "value": "Unset"
+                },
+                {
+                    "name": "RoomType",
+                    "propertyType": "RoomType",
+                    "type": "string",
+                    "value": "Normal"
                 }
             ],
             "name": "Map",
@@ -168,6 +174,22 @@
             "useAs": [
                 "property"
             ]
+        },
+        {
+            "id": 24,
+            "name": "RoomType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "Normal",
+                "Save",
+                "Shop",
+                "Boss",
+                "Joiner",
+                "Interior",
+                "Cutscene"
+            ],
+            "valuesAsFlags": false
         },
         {
             "color": "#ffffaaff",

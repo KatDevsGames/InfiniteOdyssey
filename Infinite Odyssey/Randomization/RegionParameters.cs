@@ -1,5 +1,4 @@
-﻿using System;
-using InfiniteOdyssey.Extensions;
+﻿using InfiniteOdyssey.Extensions;
 using Newtonsoft.Json;
 using Range = InfiniteOdyssey.Extensions.Range;
 

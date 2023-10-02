@@ -10,43 +10,24 @@ namespace InfiniteOdyssey.Randomization;
 public abstract class MapContainer
 {
     [JsonProperty(PropertyName = "map")]
-    public List<List<Room?>> Map;
+    public Map2D<Room> Map { get; private set; } = new();
+
+    [JsonProperty(PropertyName = "location")]
+    public Point Location;
 
     [JsonIgnore]
-    public Dictionary<Guid, Room> m_byName = new();
+    public Rectangle Bounds => new(Location, Map.Size);
 
     [JsonIgnore]
-    public Rectangle Bounds;
+    public readonly Dictionary<Guid, Room> Rooms = new();
 
-    public bool TryFindRoom(Guid id, out Room room) => m_byName.TryGetValue(id, out room);
+    public bool TryFindRoom(Guid id, out Room room) => Rooms.TryGetValue(id, out room);
 
     [OnDeserialized]
     public void OnDeserialize(StreamingContext context) => Populate();
 
     public void Populate()
     {
-        int maxY = 0;
-        int lastWidth = 0;
-        int lastHeight = 0;
-        int lenRow = Map.Count;
-        int lastRowCell = lenRow - 1;
-        for (int x = 0; x < lenRow; x++)
-        {
-            List<Room> column = Map[x];
-            int lenCol = column.Count;
-            int lastColCell = lenCol - 1;
-            for (int y = 0; y < lenCol; y++)
-            {
-                Room cell = column[y];
-                m_byName[cell.ID] = cell;
-                cell.Location.X = x;
-                cell.Location.Y = y;
-                if (x == lastRowCell) lastWidth = Math.Max(lastWidth, cell.Bounds.Width);
-                if (y == lastColCell) lastHeight = Math.Max(lastHeight, cell.Bounds.Height);
-            }
-            maxY = Math.Max(maxY, lenCol);
-        }
-        Bounds.Width = Map.Count + (lastWidth - 1);
-        Bounds.Height = Map[0].Count + (lastHeight - 1);
+        foreach (Room room in Map.Values) Rooms[room.ID] = room;
     }
 }

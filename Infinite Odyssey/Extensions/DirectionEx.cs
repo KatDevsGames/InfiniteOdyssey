@@ -38,6 +38,15 @@ public static class DirectionEx
         return (y > 0) ? Direction4.North : Direction4.South;
     }
 
+    public static Point GetPoint(this Direction4 direction) =>
+        direction switch
+        {
+            Direction4.North => new Point(0, -1),
+            Direction4.South => new Point(0, 1),
+            Direction4.East => new Point(1, 0),
+            Direction4.West => new Point(-1, 0),
+        };
+
     public static Direction4 GetOpposite(this Direction4 direction) =>
         direction switch
         {

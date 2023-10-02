@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace InfiniteOdyssey.Randomization;
@@ -32,4 +35,13 @@ public class Floor : MapContainer
 {
     [JsonProperty(PropertyName = "id")]
     public Guid ID;
+
+    public IEnumerable<Room> GetNeighbors(Room room)
+    {
+        foreach (Transition transition in room.Transitions.Values)
+        {
+            if (transition.State == TransitionState.Unbound) continue;
+            yield return transition.DestinationTransition.Room;
+        }
+    }
 }

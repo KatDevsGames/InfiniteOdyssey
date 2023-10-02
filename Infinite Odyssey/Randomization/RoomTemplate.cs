@@ -19,6 +19,9 @@ public class RoomTemplate
     [JsonProperty(PropertyName = "level")]
     public int Level;
 
+    [JsonProperty(PropertyName = "roomType")]
+    public RoomType RoomType;
+
     [JsonIgnore]
     public Point Size;
 
@@ -58,11 +61,10 @@ public class RoomTemplate
     }
 
 
-    public ExitMatch IsExitMatch(Room other) => IsExitMatch(other.Location, other.Template);
-    public ExitMatch IsExitMatch(Point location, RoomTemplate other)
+    public ExitMatch IsExitMatch(Room other)
     {
         Rectangle localRect = new(Point.Zero, Size);
-        Rectangle otherRect = new(location, other.Size);
+        Rectangle otherRect = new(other.Location, other.Template.Size);
 
         Direction4 localDirection;
         if (localRect.Top == otherRect.Bottom) localDirection = Direction4.North;
@@ -80,7 +82,7 @@ public class RoomTemplate
         int localUnsealable = 0;
         foreach (TransitionTemplate transition in GetTransitions(sourcePerimeter))
         {
-            if (transition.ExitType != ExitType.Standard) continue;
+            if (transition.ExitType is not (ExitType.Open or ExitType.Door)) continue;
             if (transition.Direction != localDirection) continue;
             if (TransitionSeals.Values.All(s => s.Transition != transition.Name)) localUnsealable++;
             localTotal++;
@@ -88,9 +90,9 @@ public class RoomTemplate
 
         int remoteTotal = 0;
         int remoteUnsealable = 0;
-        foreach (TransitionTemplate transition in GetTransitions(otherPerimeter))
+        foreach (TransitionTemplate transition in other.Template.GetTransitions(otherPerimeter))
         {
-            if (transition.ExitType != ExitType.Standard) continue;
+            if (transition.ExitType is not (ExitType.Open or ExitType.Door)) continue;
             if (transition.Direction != remoteDirection) continue;
             if (TransitionSeals.Values.All(s => s.Transition != transition.Name)) remoteUnsealable++;
             remoteTotal++;

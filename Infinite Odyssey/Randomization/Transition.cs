@@ -16,6 +16,17 @@ public class Transition
     [JsonProperty(PropertyName = "transition")]
     private string TemplateName => Template.Name;
 
+    [JsonProperty(PropertyName = "exitType")]
+
+    private ExitType? m_exitType;
+
+    [JsonIgnore]
+    public ExitType ExitType
+    {
+        get => m_exitType ?? Template.ExitType;
+        set => m_exitType = value;
+    }
+
     [JsonIgnore]
     private Room DestinationRoom;
 
@@ -28,6 +39,9 @@ public class Transition
     [JsonProperty(PropertyName = "destinationRoom")]
     private Guid DestinationRoomID => DestinationRoom.ID;
 
+    [JsonProperty(PropertyName = "state")]
+    public TransitionState State;
+
     [JsonConstructor]
     private Transition() { }
 
@@ -35,5 +49,6 @@ public class Transition
     {
         Room = room;
         Template = template;
+        State = TransitionState.Unbound;
     }
 }

@@ -5,7 +5,7 @@ namespace InfiniteOdyssey.Randomization;
 [Serializable]
 public enum RoomType
 {
-    Normal,
+    Normal = 0,
     Save,
     Shop,
     Boss,

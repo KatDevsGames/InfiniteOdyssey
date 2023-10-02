@@ -87,7 +87,7 @@ public class RegionGenerator
         int top = int.MaxValue;
         foreach (Transition entrance in dungeon.Entrances)
         {
-            if (entrance.Template.ExitType != ExitType.Dungeon) continue;
+            if (entrance.ExitType != ExitType.Dungeon) continue;
             Point loc = entrance.Room.Location;
             points.Add((loc, entrance));
             if (left > loc.X) left = loc.X;
@@ -122,7 +122,7 @@ public class RegionGenerator
             IList<IEnumerable<(Point location, Transition destination)>> potentialEntrances = SuggestEntrances(region, dungeon).ToArray().Shuffle(m_rng);
             foreach (var pE in potentialEntrances)
             {
-                
+                //todo something probably
             }
         }
 
@@ -183,7 +183,7 @@ public class RegionGenerator
         Direction4 exits = 0;
         foreach (TransitionTemplate t in toCompare.Transitions.Values)
         {
-            if (t.ExitType != ExitType.Standard) return false;
+            if (t.ExitType != ExitType.Open) return false;
             Direction4 thisDir = t.Direction;
             if (exits.HasFlag(thisDir)) return false;
             exits &= thisDir;

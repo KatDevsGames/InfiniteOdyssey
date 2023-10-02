@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using InfiniteOdyssey.Extensions;
 using Microsoft.Xna.Framework;
-using MonoGame.Extended.Collisions;
 
 namespace InfiniteOdyssey.Randomization;
 
 public class DungeonGenerator
 {
     private readonly Game m_game;
-    private readonly RNG m_rng;
 
     private readonly WorldParameters m_parameters;
     private readonly World m_world;
@@ -18,95 +16,225 @@ public class DungeonGenerator
     private readonly RoomBank m_bank;
     private DungeonParameters? m_dungeonParameters;
 
-    public DungeonGenerator(long seed, Game game, WorldParameters parameters, World world)
+    public DungeonGenerator(Game game, WorldParameters parameters, World world)
     {
         m_game = game;
         m_parameters = parameters;
         m_world = world;
-
-        m_rng = new RNG(seed);
+        
         m_bank = new RoomBank(game);
     }
-
+    [ConsumesRNG]
     public void Generate(int regionIndex, int dungeonIndex)
     {
         if (m_world.Regions.Length <= regionIndex) throw new ArgumentOutOfRangeException(nameof(regionIndex), "Not a valid region index.");
         Region region = m_world.Regions[regionIndex];
         Dungeon dungeon = region.Dungeons[dungeonIndex];
         m_dungeonParameters = region.Parameters.Dungeons?[dungeonIndex];
+        RNG rng = new(dungeon.Seed);
 
         List<RoomTemplate> roomSet = m_bank.GetBy(MapType.Dungeon, dungeon.Biome).ToList();
-        Floor[] floors = dungeon.Floors = new Floor[m_rng.IRandom(m_dungeonParameters.FloorCount)];
+        Floor[] floors = dungeon.Floors = new Floor[rng.IRandom(m_dungeonParameters.FloorCount)];
         int numFloors = floors.Length;
-        BossPlacement bossPlacement = m_dungeonParameters.BossPlacement ?? EnumEx<BossPlacement>.TakeRandomValue(m_rng);
+        BossPlacement bossPlacement = m_dungeonParameters.BossPlacement ?? EnumEx<BossPlacement>.TakeRandomValue(rng);
         int bossFloor;
         if (numFloors <= 2) bossFloor = numFloors - 1;
         else bossFloor = bossPlacement switch
         {
             BossPlacement.BossAtEnd => numFloors - 1,
-            BossPlacement.BossKeyAtEnd => m_rng.IRandom(1..(numFloors - 1)),
+            BossPlacement.BossKeyAtEnd => rng.IRandom(1..(numFloors - 1)),
             _ => numFloors - 1
         };
         for (int i = 0; i < numFloors; i++)
         {
-            int floorTarget = m_rng.IRandom(m_dungeonParameters.RoomCount / numFloors);
+            int floorTarget = rng.IRandom(m_dungeonParameters.RoomCount / numFloors);
             int entrances;
             if (i == 0)
             {
                 entrances = floorTarget switch
                 {
                     < 9 => 1,
-                    >= 9 and < 14 => m_rng.IRandom(1..2, 0.5),
-                    >= 14 and < 25 => m_rng.IRandom(1..2),
-                    >= 25 => m_rng.IRandom(1..3, 0.9)
+                    >= 9 and < 14 => rng.IRandom(1..2, 0.5),
+                    >= 14 and < 25 => rng.IRandom(1..2),
+                    >= 25 => rng.IRandom(1..3, 0.9)
                 };
             }
             else entrances = 0;
-            GenerateFloor(dungeon, roomSet, i, floorTarget, entrances, i == bossFloor);
+            GenerateFloor(rng, dungeon, roomSet, i, floorTarget, entrances, i == bossFloor);
         }
+        SealTransitions(dungeon);
     }
 
-    private void GenerateFloor(Dungeon dungeon, IList<RoomTemplate> roomSet, int floorIndex, int targetRooms, int entrances, bool boss)
+    private bool GenerateFloor(RNG rng, Dungeon dungeon, IList<RoomTemplate> roomSet, int floorIndex, int targetRooms, int entrances, bool boss)
     {
-        Floor floor = dungeon.Floors[floorIndex];
-        List<List<Room>> map = floor.Map;
+        Floor floor = dungeon.Floors[floorIndex] = new Floor();
+        var map = floor.Map;
 
         int totalRooms = boss ? 1 : 0;
 
+        //if this isn't the main floor, we need to work with the existing staircases, so place those connections first
+        if (floorIndex > 0)
+        {
+            Floor previousFloor = dungeon.Floors[floorIndex - 1] = new Floor();
+            IList<Transition> staircases = previousFloor.Rooms.Values.SelectMany(r => r.Transitions.Values).ToArray().Shuffle(rng);
+            TryPlaceStaircases(rng, map, roomSet, staircases);
+        }
+
+        //once we've met the requirements of existing geometry, place entrances
         RoomTemplate[]? entranceRooms = null;
-        for (; entrances > 0; entrances--)
+        if (entrances-- > 0)
         {
             entranceRooms ??= roomSet.Where(r => r.Transitions.Values.Any(t => t.ExitType == ExitType.Dungeon)).ToArray();
+            TryPlaceEntrance(rng, map, entranceRooms);
+            totalRooms++;
+        }
 
-        }
-        for (; totalRooms <= targetRooms; totalRooms++)
+        //place the main bulk of the rooms
+        targetRooms -= entrances;
+        while (totalRooms++ <= targetRooms)
         {
-            //fill in common rooms
+            if (!TryPlaceRoom(rng, map, roomSet)) return false;
         }
+
+        //place the other entrances
+        while (entrances-- > 0)
+        {
+            entranceRooms ??= roomSet.Where(r => r.Transitions.Values.Any(t => t.ExitType == ExitType.Dungeon)).ToArray();
+            if(!TryPlaceRoom(rng, map, entranceRooms)) return false;
+            //totalRooms++;
+        }
+
+        //finally, we put in the boss room
         if (boss)
         {
-            //place boss room
+            RoomTemplate[] bossRooms = roomSet.Where(r => r.RoomType == RoomType.Boss).ToArray();
+            if(!TryPlaceRoom(rng, map, bossRooms)) return false;
+            //totalRooms++;
+        }
+        map.Trim();
+        return true;
+    }
+
+    [ConsumesRNG]
+    private void TryPlaceStaircases(RNG rng, Map2D<Room> map, IList<RoomTemplate> roomSet, IList<Transition> transitions)
+    {
+        var candidates = roomSet
+            .Where(r => r.Transitions.Values.Any(t => t.ExitType is (ExitType.Door or ExitType.Staircase)))
+            .ToArray();
+        foreach (Transition transition in transitions)
+        {
+            candidates.Shuffle(rng);
+            foreach (RoomTemplate room in candidates)
+            {
+                var destTransitions = room.Transitions.Values
+                    .Where(t => t.ExitType is (ExitType.Door or ExitType.Staircase))
+                    .ToArray()
+                    .Shuffle(rng);
+                foreach (TransitionTemplate destTransition in destTransitions)
+                {
+                    if (TryConnect(rng, map, transition, destTransition)) goto nextTransition;
+                }
+            }
+            throw new ArgumentException("Could not satisfy transition requirements.", nameof(map));
+            nextTransition:;
         }
     }
 
-    private void PutRoom(List<List<Room>> map, int x, int y, Room room)
+    private void TryPlaceEntrance(RNG rng, Map2D<Room> map, IList<RoomTemplate> roomSet)
     {
-        int height = map.FirstOrDefault()?.Count ?? 0;
-        int newHeight = Math.Max(height, y + 1);
+        if (roomSet.Count == 0) throw new ArgumentException("The supplied room set was empty.", nameof(roomSet));
 
-        if (x >= map.Count) map.Resize(x + 1, () => (new List<Room>()).Resize(newHeight));
-        if (y >= height) foreach (List<Room> rooms in map) rooms.Resize(newHeight);
-
-        map[x][y] = room;
+        var rooms = map.Values.ToArray();
+        if (rooms.Length != 0)
+            if (roomSet.Count == 0) throw new ArgumentException("The supplied map was not empty.", nameof(map));
+        PlaceAt(rng, map, roomSet.TakeRandom(rng), Point.Zero);
     }
 
-    private IEnumerable<Point> UnmappedPoints(Dungeon dungeon, int floor)
+
+    [ConsumesRNG]
+    private bool TryPlaceRoom(RNG rng, Map2D<Room> map, IList<RoomTemplate> roomSet)
     {
-        List<List<Room?>> rooms = dungeon.Floors[floor].Map;
-        for (int x = 0; x < rooms.Count; x++)
-            for (int y = 0; y < rooms[x].Count; y++)
+        if (roomSet.Count == 0) throw new ArgumentException("The supplied room set was empty.", nameof(roomSet));
+
+        IList<Transition> transitions = FindUnboundTransitions(map).ToArray().Shuffle(rng);
+        if (transitions.Count == 0) throw new ArgumentException("Cannot place room because the supplied map contained no unbound transitions to grow from. Place an entrance room first.", nameof(map));
+        foreach (var transition in transitions)
+        {
+            if (transition.ExitType is not (ExitType.Door or ExitType.Open)) continue;
+            var rooms = roomSet.Where(r => r.Transitions.Values.Any(transition.Template.IsMatch)).ToArray().Shuffle(rng);
+            foreach (var room in rooms)
             {
-                if (rooms[x][y] == null) yield return new(x, y);
+                var otherTransitions = room.Transitions.Values.Where(transition.Template.IsMatch).ToArray().Shuffle(rng);
+                foreach (var otherTransition in otherTransitions)
+                {
+                    if (TryConnect(rng, map, transition, otherTransition)) return true;
+                }
             }
+        }
+
+        return false;
+    }
+
+    [ConsumesRNG]
+    private Room PlaceAt(RNG rng, Map2D<Room> map, RoomTemplate room, Point location)
+    {
+        Room r = new(room)
+        {
+            Location = location,
+            Seed = rng.RandomInt64()
+        };
+
+        for (int x = 0; x < room.Size.X; x++)
+        for (int y = 0; y < room.Size.Y; y++)
+            map[x, y] = r;
+
+        return r;
+    }
+
+    private IEnumerable<Transition> FindUnboundTransitions(Map2D<Room> map)
+    {
+        foreach (Room room in map.Values)
+        foreach (Transition transition in room.Transitions.Values)
+        {
+            if (transition.State != TransitionState.Unbound) continue;
+            yield return transition;
+        }
+    }
+
+    private bool TryConnect(RNG rng, Map2D<Room> map, Transition baseTransition, TransitionTemplate newTransition)
+    {
+        //we don't do validation here because the only function that calls this doesn't pass bad data - kat
+        //if (!baseTransition.Template.IsMatch(newTransition)) return false;
+        
+        Room baseRoom = baseTransition.Room;
+        RoomTemplate newRoomTemplate = m_bank[newTransition.RoomTemplate];
+        Point baseLoc = baseRoom.Location + baseTransition.Template.Location;
+        Point newLoc = baseLoc;
+        if (baseTransition.ExitType != ExitType.Staircase) newLoc += baseTransition.Template.Direction.GetPoint();
+        newLoc -= newTransition.Location;
+        if (!map.IsEmpty(new Rectangle(newLoc, newRoomTemplate.Size))) return false;
+
+        Room newRoom = PlaceAt(rng, map, newRoomTemplate, newLoc);
+        ConnectTransitions(baseTransition, newRoom.Transitions[newTransition.Name]);
+        return true;
+    }
+
+    private void ConnectTransitions(Transition t1, Transition t2)
+    {
+        t1.State = t2.State = TransitionState.Open;
+        t2.ExitType = t1.ExitType;
+        t1.DestinationTransition = t2;
+        t2.DestinationTransition = t1;
+    }
+
+    private void SealTransitions(Dungeon dungeon)
+    {
+        foreach (Floor floor in dungeon.Floors)
+        foreach (Room room in floor.Map.Values)
+        foreach (Transition transition in room.Transitions.Values)
+        {
+            if (transition.State == TransitionState.Unbound)
+                transition.State = TransitionState.Sealed;
+        }
     }
 }

@@ -26,8 +26,8 @@ public class Room
     [JsonIgnore]
     public Rectangle Bounds => new(Location, Template.Size);
 
-    [JsonProperty(PropertyName = "doorStates")]
-    public Dictionary<string, DoorState> DoorStates;
+    [JsonProperty(PropertyName = "transitions")]
+    public Dictionary<string, Transition> Transitions;
 
     [JsonProperty(PropertyName = "treasure")]
     public Dictionary<string, object> Treasure;
@@ -35,29 +35,16 @@ public class Room
     [JsonProperty(PropertyName = "enemies")]
     public Dictionary<string, object> Enemies;
 
-    [Serializable]
-    public enum DoorState
-    {
-        Sealed = 0,
-        Open,
-        Closed,
-        Locked,
-        Missing
-    }
-
     [JsonConstructor]
     private Room() { }
 
     public Room(RoomTemplate template)
     {
         Template = template;
-    }
-
-    public static Room[][] GetEmptyMap(int width, int height)
-    {
-        Room[][] map = new Room[width][];
-        for (int i = 0; i < width; i++)
-            map[i] = new Room[height];
-        return map;
+        Transitions = new();
+        foreach (var transition in template.Transitions.Values)
+        {
+            Transitions.Add(transition.Name, new(this, transition));
+        }
     }
 }

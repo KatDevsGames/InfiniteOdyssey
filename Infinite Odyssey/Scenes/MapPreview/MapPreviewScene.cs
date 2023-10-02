@@ -25,9 +25,9 @@ public class MapPreviewScene : Scene
         m_font = Game.Content.Load<SpriteFont>("Fonts\\SettingsMenu");
         m_seed = Game.State.Parameters.Seed.ToString();
 
-        Region?[][] map = Game.State.World.RegionMap;
-        int width = map.Length;
-        int height = map[0].Length;
+        var map = Game.State.World.RegionMap;
+        int width = map.Size.X;
+        int height = map.Size.Y;
 
         int cellWidth = Game.NATIVE_RESOLUTION.X / width;
         int cellHeight = Game.NATIVE_RESOLUTION.Y / height;
@@ -36,12 +36,13 @@ public class MapPreviewScene : Scene
         m_texture = new Texture2D(Game.GraphicsDevice, cellWidth * width, cellHeight * height);
 
         Color[] cellToPaint = new Color[cellSize];
-        for (int x = 0; x < width; x++)
+        foreach (int x in map.Range)
         {
-            for (int y = 0; y < height; y++)
+            var col = map[x];
+            foreach (int y in col.Range)
             {
                 Rectangle rect = new(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
-                cellToPaint.Fill(map[x][y]?.Biome.GetDebugColor() ?? Color.Magenta);
+                cellToPaint.Fill(col[y]?.Biome.GetDebugColor() ?? Color.Magenta);
                 m_texture.SetData(0, rect, cellToPaint, 0, cellSize);
             }
         }

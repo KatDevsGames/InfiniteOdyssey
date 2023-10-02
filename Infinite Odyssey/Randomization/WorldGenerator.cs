@@ -60,7 +60,7 @@ public class WorldGenerator
         var regions = m_world.Regions;
         int width = m_world.Width = m_rng.IRandom(m_parameters.Width);
         int height = m_world.Height = m_rng.IRandom(m_parameters.Height);
-        Region?[][] map = m_world.RegionMap = Region.GetEmptyMap(width, height);
+        var map = m_world.RegionMap;
 
         foreach (Region r in regions) // seed the regions wherever
         {
@@ -139,7 +139,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         List<Point> borderCells = GetRegionCells(BORDER_REGION);
         int reclaims;
@@ -200,7 +200,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         foreach (Region region in m_world.Regions)
         {
@@ -250,7 +250,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         List<Point> cells = new();
         for (int x = 0; x < width; x++)
@@ -295,7 +295,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         while (true)
         {
@@ -325,7 +325,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         List<Point> result = new();
         for (int x = 0; x < width; x++)
@@ -339,45 +339,45 @@ public class WorldGenerator
 
                 if ((pitch == CellPitch.Backward) || (pitch == CellPitch.Always))
                 {
-                    if (!BorderCompare((x - 1, y - 1), cell)) { result.Add(new Point(x, y)); continue; }
-                    if (!BorderCompare((x - 1, y + 1), cell)) { result.Add(new Point(x, y)); continue; }
+                    if (!BorderCompare(new(x - 1, y - 1), cell)) { result.Add(new Point(x, y)); continue; }
+                    if (!BorderCompare(new(x - 1, y + 1), cell)) { result.Add(new Point(x, y)); continue; }
                 }
 
-                if (!BorderCompare((x - 1, y), cell)) { result.Add(new Point(x, y)); continue; }
+                if (!BorderCompare(new(x - 1, y), cell)) { result.Add(new Point(x, y)); continue; }
 
-                if (!BorderCompare((x, y - 1), cell)) { result.Add(new Point(x, y)); continue; }
-                if (!BorderCompare((x, y + 1), cell)) { result.Add(new Point(x, y)); continue; }
+                if (!BorderCompare(new(x, y - 1), cell)) { result.Add(new Point(x, y)); continue; }
+                if (!BorderCompare(new(x, y + 1), cell)) { result.Add(new Point(x, y)); continue; }
 
-                if (!BorderCompare((x + 1, y), cell)) { result.Add(new Point(x, y)); continue; }
+                if (!BorderCompare(new(x + 1, y), cell)) { result.Add(new Point(x, y)); continue; }
 
                 if ((pitch == CellPitch.Forward) || (pitch == CellPitch.Always))
                 {
-                    if (!BorderCompare((x + 1, y - 1), cell)) { result.Add(new Point(x, y)); continue; }
-                    if (!BorderCompare((x + 1, y + 1), cell)) { result.Add(new Point(x, y)); continue; }
+                    if (!BorderCompare(new(x + 1, y - 1), cell)) { result.Add(new Point(x, y)); continue; }
+                    if (!BorderCompare(new(x + 1, y + 1), cell)) { result.Add(new Point(x, y)); continue; }
                 }
             }
         }
         return result;
     }
 
-    private bool BorderCompare((long x, long y) location, Region r)
+    private bool BorderCompare(Point location, Region r)
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
-        if (location.x < 0) { return true; }
-        if (location.x >= width) { return true; }
-        if (location.y < 0) { return true; }
-        if (location.y >= height) { return true; }
+        if (location.X < 0) { return true; }
+        if (location.X >= width) { return true; }
+        if (location.Y < 0) { return true; }
+        if (location.Y >= height) { return true; }
 
-        Region target = map[location.x][location.y];
+        Region target = map[location.X][location.Y];
         if (BORDER_REGION.Equals(target)) { return true; }
         return r.Equals((target ?? r));
     }
     private void BuildSetBridges()
     {
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         List<List<(int x, int y, bool horiz)>> bridgeSets = FindRegionalBridges();
         HashSet<(HashSet<Point>, HashSet<Point>)> taken = new();
@@ -519,7 +519,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         List<Point> result = new();
 
@@ -536,7 +536,7 @@ public class WorldGenerator
 
     private bool IsNormal(Point location)
     {
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         var (x, y) = location;
         if (map[x][y] is { } r) return r.Biome != Biome.Phlogiston;
@@ -576,7 +576,7 @@ public class WorldGenerator
     {
         int width = m_world.Width;
         int height = m_world.Height;
-        Region?[][] map = m_world.RegionMap;
+        var map = m_world.RegionMap;
 
         List<(int x, int y, bool horiz)> result = new();
 

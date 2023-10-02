@@ -42,6 +42,8 @@ public static class TiledMapEx
         RoomTemplate roomTemplate = new()
         {
             Name = tiledMap.Name,
+            Biome = tiledMap.Properties.TryGetValue("Biome", out Biome biome) ? biome : 0,
+            RoomType = tiledMap.Properties.TryGetValue("RoomType", out RoomType roomType) ? roomType : RoomType.Normal,
             Size = new Point(tiledMap.Width / Game.TILES_PER_SCREEN.X, tiledMap.Height / Game.TILES_PER_SCREEN.Y),
             Treasure = tiledMap.GetTreasure().ToDictionary(t => new KeyValuePair<string, TreasureTemplate>(t.Name, t)),
             Transitions = tiledMap.GetTransitions().ToDictionary(t => new KeyValuePair<string, TransitionTemplate>(t.Name, t)),
@@ -51,6 +53,66 @@ public static class TiledMapEx
         };
 
         return roomTemplate;
+    }
+
+    public static bool TryGetValue<T>(this TiledMapProperties properties, string key, out T value) where T : struct
+    {
+        if (!properties.TryGetValue(key, out string stringValue)) goto fail;
+
+        Type resultType = typeof(T);
+        if (resultType.IsEnum) return Enum.TryParse(stringValue, out value);
+        if (resultType == typeof(byte))
+        {
+            if (!byte.TryParse(stringValue, out byte v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(sbyte))
+        {
+            if (!sbyte.TryParse(stringValue, out sbyte v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(ushort))
+        {
+            if (!ushort.TryParse(stringValue, out ushort v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(short))
+        {
+            if (!short.TryParse(stringValue, out short v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(uint))
+        {
+            if (!uint.TryParse(stringValue, out uint v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(int))
+        {
+            if (!int.TryParse(stringValue, out int v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(ulong))
+        {
+            if (!ulong.TryParse(stringValue, out ulong v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+        if (resultType == typeof(long))
+        {
+            if (!long.TryParse(stringValue, out long v)) goto fail;
+            value = (T)(object)v;
+            return true;
+        }
+
+        fail:
+        value = default;
+        return false;
     }
 
     public static bool TryGetTransition(this TiledMap tiledMap, string name, [MaybeNullWhen(false)] out TransitionTemplate transition)
@@ -99,7 +161,7 @@ public static class TiledMapEx
         {
             TiledMapProperties properties = obj.Properties;
             TransitionSeal seal = new(obj.Name);
-            
+
             seal.Gap = properties.TryGetValue(SEAL_GAP, out string gap) ? int.Parse(gap) : 0;
             seal.Transition = properties.TryGetValue(SEAL_TRANSITION, out string transition) ? transition : string.Empty;
 

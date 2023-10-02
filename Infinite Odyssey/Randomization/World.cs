@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
@@ -18,10 +17,10 @@ public class World
     public Region[] Regions;
 
     [JsonIgnore]
-    public Region?[][] RegionMap;
+    public readonly Map2D<Region> RegionMap = new();
 
     [JsonIgnore]
-    public Room?[][] RoomMap;
+    public readonly Map2D<Room> RoomMap = new();
 
     [JsonIgnore]
     public int Width;
@@ -40,21 +39,18 @@ public class World
             Height = Math.Max(Height, (region.Bounds.Y + region.Bounds.Height) - 1);
         }
 
-        RegionMap = Region.GetEmptyMap(Width, Height);
-        RoomMap = Room.GetEmptyMap(Width, Height);
-
         foreach (Region region in Regions)
         {
-            List<List<Room?>> map = region.Map;
-            for (int x = 0; x < map.Count; x++)
+            var map = region.Map;
+            foreach (int x in map.Range)
             {
-                List<Room?> row = map[x];
-                for (int y = 0; y < row.Count; y++)
+                var col = map[x];
+                foreach (int y in col.Range)
                 {
-                    int cellX = x + region.Bounds.X;
-                    int cellY = y + region.Bounds.Y;
+                    int cellX = x + region.Location.X;
+                    int cellY = y + region.Location.Y;
                     RegionMap[cellX][cellY] = region;
-                    RoomMap[cellX][cellY] = row[y];
+                    RoomMap[cellX][cellY] = col[y];
                 }
             }
         }

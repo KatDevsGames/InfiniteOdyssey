@@ -16,11 +16,14 @@ public class TransitionTemplate
     [JsonProperty(PropertyName = "bounds")]
     public Rectangle Bounds;
 
+    [JsonIgnore]
+    public Point Location => Bounds.Center / Game.PIXELS_PER_SCREEN;
+
     [JsonProperty(PropertyName = "direction")]
     public Direction4 Direction = Direction4.North;
 
     [JsonProperty(PropertyName = "exitType")]
-    public ExitType ExitType = ExitType.Standard;
+    public ExitType ExitType = ExitType.Open;
 
     [JsonProperty(PropertyName = "entranceType")]
     public EntranceType EntranceType = EntranceType.NoChange;
@@ -31,5 +34,12 @@ public class TransitionTemplate
     public TransitionTemplate(string name)
     {
         Name = name;
+    }
+
+    public bool IsMatch(TransitionTemplate? other)
+    {
+        if (other == null) return false;
+        if (ExitType != other.ExitType) return false;
+        return Direction == other.Direction.GetOpposite();
     }
 }

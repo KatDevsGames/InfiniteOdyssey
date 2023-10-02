@@ -30,12 +30,4 @@ public class Region : MapContainer
 
     [JsonIgnore]
     public Point SeedLocation;
-
-    public static Region[][] GetEmptyMap(int width, int height)
-    {
-        Region[][] map = new Region[width][];
-        for (int i = 0; i < width; i++)
-            map[i] = new Region[height];
-        return map;
-    }
 }

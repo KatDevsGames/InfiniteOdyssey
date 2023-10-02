@@ -31,7 +31,7 @@
         "Overworld/Test.tmx"
     ],
     "project": "InfiniteOdyssey.tiled-project",
-    "property.type": "Biome",
+    "property.type": "RoomType",
     "recentFiles": [
         "Overworld/Test.tmx",
         "Tilesets/Testing (Terrain).tsx"
