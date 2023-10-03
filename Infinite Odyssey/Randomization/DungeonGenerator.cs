@@ -215,16 +215,8 @@ public class DungeonGenerator
         if (!map.IsEmpty(new Rectangle(newLoc, newRoomTemplate.Size))) return false;
 
         Room newRoom = PlaceAt(rng, map, newRoomTemplate, newLoc);
-        ConnectTransitions(baseTransition, newRoom.Transitions[newTransition.Name]);
+        baseTransition.Connect(newRoom.Transitions[newTransition.Name]);
         return true;
-    }
-
-    private void ConnectTransitions(Transition t1, Transition t2)
-    {
-        t1.State = t2.State = TransitionState.Open;
-        t2.ExitType = t1.ExitType;
-        t1.DestinationTransition = t2;
-        t2.DestinationTransition = t1;
     }
 
     private void SealTransitions(Dungeon dungeon)

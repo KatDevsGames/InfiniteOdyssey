@@ -51,4 +51,12 @@ public class Transition
         Template = template;
         State = TransitionState.Unbound;
     }
+
+    public void Connect(Transition t2)
+    {
+        State = t2.State = TransitionState.Open;
+        t2.ExitType = ExitType;
+        DestinationTransition = t2;
+        t2.DestinationTransition = this;
+    }
 }

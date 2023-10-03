@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using InfiniteOdyssey.Extensions;
 using Microsoft.Xna.Framework;
+using MonoGame.Extended.Screens.Transitions;
 
 namespace InfiniteOdyssey.Randomization;
 
@@ -15,6 +16,7 @@ public class RegionGenerator
     private readonly World m_world;
 
     private readonly RoomBank m_bank;
+    private readonly DungeonGenerator m_dungeonGenerator;
 
     public RegionGenerator(long seed, Game game, WorldParameters parameters, World world)
     {
@@ -24,15 +26,22 @@ public class RegionGenerator
 
         m_rng = new RNG(seed);
         m_bank = new RoomBank(game);
+
+        m_dungeonGenerator = new(game, parameters, world);
     }
 
     public void Generate(int index)
     {
         if (m_world.Regions.Length <= index) throw new ArgumentOutOfRangeException(nameof(index), "Not a valid region index.");
         Region region = m_world.Regions[index];
+        for (int i = 0; i < region.Parameters.Dungeons.Length; i++)
+            m_dungeonGenerator.Generate(index, i);
 
         FillKeyMaps(region);
         FillRemainingMaps(region);
+
+        AttachAllTransitions(region);
+        SealTransitions(region);
     }
 
     private IEnumerable<Point> UnmappedPoints(Region region)
@@ -103,26 +112,75 @@ public class RegionGenerator
     {
         HashSet<Point> cells = UnmappedPoints(region).ToHashSet();
         var entrancePoints = GetEntrancePoints(dungeon);
-        for (int x = 0; x < m_world.Width; x++)
-        for (int y = 0; y < m_world.Height; y++)
+        foreach (int x in region.Map.Range)
         {
-            Point offset = new(x, y);
-            (Point location, Transition room)[] offsetCells = entrancePoints.Select(e => (e.location += offset, e.transition)).ToArray();
-            if (offsetCells.All(c => cells.Contains(c.location))) yield return offsetCells;
+            var col = region.Map[x];
+            foreach (int y in col.Range)
+            {
+                Point offset = new(x, y);
+                (Point location, Transition room)[] offsetCells = entrancePoints.Select(e => (e.location += offset, e.transition)).ToArray();
+                if (offsetCells.All(c => cells.Contains(c.location))) yield return offsetCells;
+            }
         }
     }
 
     [ConsumesRNG]
     private void FillKeyMaps(Region region)
     {
+        HashSet<RoomTemplate> history = new();
         List<(Dungeon dungeon, RoomTemplate room, TransitionTemplate transition)> toFill = new();
-        IList<RoomTemplate> entrancePool = m_bank.GetBy(MapType.Overworld, region.Biome).Where(r => r.Transitions.Values.Any(t=>t.ExitType == ExitType.Dungeon)).ToArray().Shuffle(m_rng);
+        IList<RoomTemplate> entrancePool = m_bank.GetBy(MapType.Overworld, region.Biome).Where(r => r.Transitions.Values.Any(t=>t.ExitType == ExitType.Dungeon)).ToArray();
         foreach (Dungeon dungeon in region.Dungeons)
         {
             IList<IEnumerable<(Point location, Transition destination)>> potentialEntrances = SuggestEntrances(region, dungeon).ToArray().Shuffle(m_rng);
+            float maxScore = float.NegativeInfinity;
+            List<(Point location, RoomTemplate entrance, Transition destination)>? bestSuggestion = null;
             foreach (var pE in potentialEntrances)
             {
-                //todo something probably
+                float middleMaxScore = float.NegativeInfinity;
+                List<(Point location, RoomTemplate entrance, Transition destination)>? innerSuggestion = new();
+                foreach (var (location, transition) in pE)
+                {
+                    float localTotal = 0;
+                    entrancePool.Shuffle(m_rng);
+                    float localMaxScore = float.NegativeInfinity;
+                    RoomTemplate? localBestSuggestion = null;
+                    foreach (RoomTemplate suggestion in entrancePool)
+                    {
+                        float score = ScoreSuggestion(location, suggestion, history);
+                        if (score <= 0) continue;
+                        if (score > localMaxScore)
+                        {
+                            if (localMaxScore > 0) localTotal -= localMaxScore;
+                            localTotal += score;
+                            localMaxScore = score;
+                            localBestSuggestion = suggestion;
+                        }
+                    }
+                    if (float.IsNegativeInfinity(localMaxScore)) goto nextCandidate;
+
+                    if (localTotal > middleMaxScore)
+                    {
+                        middleMaxScore = localTotal;
+                        innerSuggestion.Add((location, localBestSuggestion, transition));
+                    }
+                }
+
+                if (float.IsNegativeInfinity(middleMaxScore)) goto nextCandidate;
+                if (middleMaxScore > maxScore)
+                {
+                    maxScore = middleMaxScore;
+                    bestSuggestion = innerSuggestion;
+                }
+
+                nextCandidate:;
+            }
+            if (bestSuggestion == null) throw new Exception($"Unable to satisfy tiling constraints for region {region.Name}. Try decreasing the number of key maps in the pool or increasing the size of the region.");
+            foreach (var bSug in bestSuggestion)
+            {
+                Room room = FillBox(bSug.location, bSug.entrance);
+                Transition dest = room.Transitions.Values.First(t => t.ExitType == ExitType.Dungeon);
+                dest.Connect(bSug.destination);
             }
         }
 
@@ -136,11 +194,11 @@ public class RegionGenerator
             {
                 var location = cells.TakeRandom(m_rng);
                 boxes = GetFreeBoxes(region, new Rectangle(location, map.room.Size));
-                if (i++ >= 64) { throw new Exception($"Unable to satisfy tiling constraints for region {region.Name}. Try decreasing the number of key maps in the pool or increasing the size of the region."); }
+                if (i++ >= 64) throw new Exception($"Unable to satisfy tiling constraints for region {region.Name}. Try decreasing the number of key maps in the pool or increasing the size of the region.");
             } while (!boxes.Any());
 
             var box = boxes.TakeRandom(m_rng);
-            FillBox(box, map.room);
+            FillBox(box.Location, map.room);
         }
     }
 
@@ -172,7 +230,7 @@ public class RegionGenerator
                 }
             }
             if (selection == null) throw new Exception("Search exceeded maximum size and no filler map was found.");
-            FillBox(new Rectangle(location, selection.Size), selection);
+            FillBox(location, selection);
             cells = UnmappedPoints(region);
         }
     }
@@ -251,10 +309,14 @@ public class RegionGenerator
             }
             i++;
         }
+        if (i == 0) return 0.9f;
         score /= i;
         if (history.Contains(template)) score *= 0.7f;
         return score;
     }
+
+    private IEnumerable<Room> SurroundingRooms(Room room)
+        => SurroundingRooms(room.Location, room.Template);
 
     private IEnumerable<Room> SurroundingRooms(Point location, RoomTemplate template)
     {
@@ -305,6 +367,43 @@ public class RegionGenerator
         }
     }
 
+    private void AttachAllTransitions(Region region)
+    {
+        foreach (Room room in region.Map.Values)
+        foreach (Room neighbor in SurroundingRooms(room))
+        foreach ((Transition t1, Transition t2) in GetUnboundMutualTransitions(room, neighbor))
+            if ((t1.State == TransitionState.Unbound) && (t2.State == TransitionState.Unbound)) t1.Connect(t2);
+    }
+
+    private void SealTransitions(Region region)
+    {
+        foreach (Room room in region.Map.Values)
+        foreach (Transition transition in room.Transitions.Values)
+        {
+            if (transition.State == TransitionState.Unbound)
+                transition.State = TransitionState.Sealed;
+        }
+    }
+
+    private IEnumerable<(Transition t1, Transition t2)> GetUnboundMutualTransitions(Room r1, Room r2)
+    {
+        var remnoteTransitions = r2.Transitions.Values;
+        foreach (Transition tLocal in r1.Transitions.Values)
+        {
+            TransitionTemplate localTemplate = tLocal.Template;
+            if (tLocal.ExitType != ExitType.Open) continue;
+            Point requiredLocation = r1.Location + localTemplate.Location + localTemplate.Direction.GetPoint();
+            foreach (Transition tRemote in remnoteTransitions)
+            {
+                if (tRemote.ExitType != ExitType.Open) continue;
+                TransitionTemplate remoteTemplate = tRemote.Template;
+                if (localTemplate.Direction != remoteTemplate.Direction.GetOpposite()) continue;
+                if ((r2.Location + remoteTemplate.Location) != requiredLocation) continue;
+                yield return (tLocal, tRemote);
+            }
+        }
+    }
+
     private IEnumerable<Rectangle> GetFreeBoxes(Region region, Rectangle rectangle)
     {
         for (int nX = rectangle.X - (rectangle.Width - 1); nX <= rectangle.X; nX++)
@@ -329,12 +428,14 @@ public class RegionGenerator
         }
     }
 
-    private void FillBox(Rectangle box, RoomTemplate map)
+    private Room FillBox(Point location, RoomTemplate room)
     {
-        Room fill = new(map) { Location = new Point(box.X, box.Y) };
+        Room fill = new(room) { Location = new Point(location.X, location.Y) };
 
-        for (int i = 0; i < box.Width; i++)
-            for (int j = 0; j < box.Height; j++)
-                m_world.RoomMap[box.X + i][box.Y + j] = fill;
+        for (int i = 0; i < room.Size.X; i++)
+        for (int j = 0; j < room.Size.Y; j++)
+            m_world.RoomMap[location.X + i][location.Y + j] = fill;
+
+        return fill;
     }
 }

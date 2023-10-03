@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace InfiniteOdyssey.Extensions;
 
 [JsonConverter(typeof(Converter))]
-public readonly struct Range : IEnumerable<int>, IEquatable<Range>
+public readonly struct Range : IReadOnlyList<int>, IEquatable<Range>
 {
     public static readonly Range Invalid = new(int.MaxValue, int.MinValue, true);
 
@@ -89,6 +89,18 @@ public readonly struct Range : IEnumerable<int>, IEquatable<Range>
 
     public static Range operator /(Range a, int b) => new(a.Minimum / b, a.Maximum / b);
     public static Range operator /(int a, Range b) => new(b.Minimum / a, b.Maximum / a);
+
+    public int Count => (Maximum - Minimum) + 1;
+
+    public int this[int index]
+    {
+        get
+        {
+            int result = Minimum + index;
+            if (result > Maximum) throw new IndexOutOfRangeException();
+            return result;
+        }
+    }
 
     public bool Equals(Range other) => (Minimum == other.Minimum) && (Maximum == other.Maximum);
     public bool Equals(System.Range other) => (Minimum == other.Start.Value) && (Maximum == other.End.Value);
